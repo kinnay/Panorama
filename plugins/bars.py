@@ -1,0 +1,47 @@
+
+from jungle.aal import bars, bamta
+import qtawesome
+import nodes
+
+
+class BARSAssetNode(nodes.Node):
+	def __init__(self, plugins, hash, asset):
+		super().__init__()
+
+		metadata = bamta.BAMTAFile()
+		metadata.parse(asset.metadata)
+		self.setText(0, metadata.name)
+
+		reader = nodes.MemoryReader("Metadata", asset.metadata)
+		self.addChild(plugins.create(reader))
+
+		if asset.data:
+			reader = nodes.MemoryReader("Data", asset.data)
+			self.addChild(plugins.create(reader))
+
+
+class BARSNode(nodes.File):
+	def __init__(self, plugins, reader):
+		super().__init__()
+		self.plugins = plugins
+		self.reader = reader
+
+		self.file = bars.BARSFile()
+		self.file.parse(reader.read())
+
+		self.setText(0, reader.text())
+		self.setIcon(0, qtawesome.icon("fa5s.box", color="#c00"))
+
+		for hash, asset in self.file.assets.items():
+			self.addChild(BARSAssetNode(self.plugins, hash, asset))
+	
+	def read(self):
+		return self.reader.read()
+
+
+class BARSPlugin:
+	def analyze(self, data):
+		return data[:4] == b"BARS"
+
+	def create(self, plugins, reader):
+		return BARSNode(plugins, reader)

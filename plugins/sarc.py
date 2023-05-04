@@ -4,37 +4,13 @@ import qtawesome
 import nodes
 
 
-class SARCFileReader(nodes.Reader):
-	def __init__(self, file, path):
-		self.file = file
-		self.path = path
-	
-	def text(self):
-		return self.path.split("/")[-1]
-
-	def read(self):
-		return self.file.files[self.path]
-
-
-class SARCUnnamedFileReader(nodes.Reader):
-	def __init__(self, file, hash):
-		self.file = file
-		self.hash = hash
-	
-	def text(self):
-		return "%08x" %self.hash
-
-	def read(self):
-		return self.file.unnamed_files[self.hash]
-
-
 class SARCUnnamedFilesNode(nodes.Node):
 	def __init__(self, plugins, file):
 		super().__init__()
 		self.setText(0, "<unnamed files>")
 
 		for hash in self.file.unnamed_files:
-			reader = SARCUnnamedFileReader(file, hash)
+			reader = nodes.MemoryReader("%08x" %hash, file.unnamed_files[hash])
 			self.addChild(plugins.create(reader))
 
 
@@ -58,7 +34,7 @@ class SARCFolderNode(nodes.Node):
 		for folder in folders:
 			self.addChild(SARCFolderNode(plugins, file, folder))
 		for path in files:
-			reader = SARCFileReader(file, path)
+			reader = nodes.MemoryReader(path.split("/")[-1], file.files[path])
 			self.addChild(plugins.create(reader))
 
 
@@ -87,7 +63,7 @@ class SARCNode(nodes.File):
 		for folder in folders:
 			self.addChild(SARCFolderNode(self.plugins, self.file, folder))
 		for file in files:
-			reader = SARCFileReader(self.file, file)
+			reader = nodes.MemoryReader(file, self.file.files[file])
 			self.addChild(self.plugins.create(reader))
 		
 		if self.file.unnamed_files:

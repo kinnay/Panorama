@@ -1,5 +1,5 @@
 
-from plugins import sarc, yaz0
+from plugins import bars, sarc, yaz0
 import nodes
 import qtawesome
 
@@ -27,6 +27,7 @@ class DefaultPlugin:
 class Plugins:
 	def __init__(self):
 		self.plugins = [
+			bars.BARSPlugin(),
 			sarc.SARCPlugin(),
 			yaz0.Yaz0Plugin()
 		]

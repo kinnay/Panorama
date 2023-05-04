@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
 		self.setStatusBar(self.statusBar)
 
 	def initializeWorkspace(self):
-		self.workspaceView = workspace.WorkspaceView(self.plugins)
+		self.workspaceView = workspace.WorkspaceView(self.plugins, self.settings)
 		self.workspaceView.itemActivated.connect(self.handleItemActivated)
 
 		self.workspacePaths = self.settings.value("workspace.paths", [])

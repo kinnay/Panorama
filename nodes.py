@@ -36,3 +36,15 @@ class Reader:
 	
 	def read(self):
 		return b""
+
+
+class MemoryReader(Reader):
+	def __init__(self, text, data):
+		self._text = text
+		self._data = data
+	
+	def text(self):
+		return self._text
+
+	def read(self):
+		return self._data
