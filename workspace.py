@@ -35,7 +35,7 @@ class WorkspaceView(QTreeWidget):
 		self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
 		self.itemExpanded.connect(self.handleItemExpanded)
-	
+
 	def contextMenuEvent(self, e):
 		menu = QMenu(self)
 
@@ -46,7 +46,7 @@ class WorkspaceView(QTreeWidget):
 
 		if not menu.isEmpty():
 			menu.exec(e.globalPos())
-	
+
 	def addPath(self, path):
 		if os.path.isdir(path):
 			self.addTopLevelItem(filesystem.Folder(self.plugins, path))

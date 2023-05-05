@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
 		self.menu = menu.MenuBar()
 		self.menu.file.importFile.triggered.connect(self.handleImportFile)
 		self.menu.file.importFolder.triggered.connect(self.handleImportFolder)
+		self.menu.file.reloadWorkspace.triggered.connect(self.handleReloadWorkspace)
 		self.setMenuBar(self.menu)
 
 	def initializeStatusBar(self):
@@ -122,6 +123,11 @@ class MainWindow(QMainWindow):
 			self.settings.setValue("filesystem.import_path", dir)
 			self.workspaceView.addPath(dir)
 	
+	def handleReloadWorkspace(self):
+		self.workspaceView.clear()
+		for path in self.workspacePaths:
+			self.workspaceView.addPath(path)
+
 	def handleItemActivated(self, item):
 		widgets = item.createWidgets()
 		if isinstance(item, nodes.File):
