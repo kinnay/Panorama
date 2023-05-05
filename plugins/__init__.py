@@ -1,5 +1,5 @@
 
-from plugins import bars, sarc, yaz0
+from plugins import bars, bfwav, sarc, yaz0
 import nodes
 import qtawesome
 
@@ -28,6 +28,7 @@ class Plugins:
 	def __init__(self):
 		self.plugins = [
 			bars.BARSPlugin(),
+			bfwav.BFWAVPlugin(),
 			sarc.SARCPlugin(),
 			yaz0.Yaz0Plugin()
 		]
