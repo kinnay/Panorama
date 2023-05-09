@@ -1,4 +1,5 @@
 
+from jungle.error import ParseError
 from jungle.sead import sarc
 import qtawesome
 import nodes
@@ -44,11 +45,15 @@ class SARCNode(nodes.File):
 		self.plugins = plugins
 		self.reader = reader
 
-		self.file = sarc.SARCFile()
-		self.file.parse(reader.read())
-
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#a50"))
+
+		self.file = sarc.SARCFile()
+
+		try:
+			self.file.parse(reader.read())
+		except ParseError:
+			return
 
 		files = []
 		folders = []

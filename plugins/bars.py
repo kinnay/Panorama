@@ -1,4 +1,5 @@
 
+from jungle.error import ParseError
 from jungle.aal import bars, bamta
 import qtawesome
 import nodes
@@ -9,8 +10,12 @@ class BARSAssetNode(nodes.Node):
 		super().__init__()
 
 		metadata = bamta.BAMTAFile()
-		metadata.parse(asset.metadata)
-		self.setText(0, metadata.name)
+		try:
+			metadata.parse(asset.metadata)
+		except ParseError:
+			self.setText(0, "?")
+		else:
+			self.setText(0, metadata.name)
 
 		reader = nodes.MemoryReader("Metadata", asset.metadata)
 		self.addChild(plugins.create(reader))
@@ -26,11 +31,14 @@ class BARSNode(nodes.File):
 		self.plugins = plugins
 		self.reader = reader
 
-		self.file = bars.BARSFile()
-		self.file.parse(reader.read())
-
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#c00"))
+
+		self.file = bars.BARSFile()
+		try:
+			self.file.parse(reader.read())
+		except ParseError:
+			return
 
 		for hash, asset in self.file.assets.items():
 			self.addChild(BARSAssetNode(self.plugins, hash, asset))

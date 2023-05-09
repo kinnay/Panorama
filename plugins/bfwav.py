@@ -2,6 +2,7 @@
 from PyQt6.QtCore import *
 from PyQt6.QtMultimedia import *
 from PyQt6.QtWidgets import *
+from jungle.error import ParseError
 from jungle.nw import bfwav
 from ninty import audio
 import nodes
@@ -386,7 +387,10 @@ class BFWAVNode(nodes.File):
 		self.reader = reader
 
 		self.file = bfwav.BFWAVFile()
-		self.file.parse(reader.read())
+		try:
+			self.file.parse(reader.read())
+		except ParseError:
+			self.file = None
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.volume-up", color="#c00"))
@@ -395,9 +399,10 @@ class BFWAVNode(nodes.File):
 		return self.reader.read()
 	
 	def createWidgets(self):
-		return {
-			"BFWAV": BFWAVWidget(self.file)
-		}
+		widgets = {}
+		if self.file:
+			widgets["BFWAV"] = BFWAVWidget(self.file)
+		return widgets
 
 
 class BFWAVPlugin:

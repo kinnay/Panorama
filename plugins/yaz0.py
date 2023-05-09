@@ -1,4 +1,5 @@
 
+from jungle.error import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
 import nodes
@@ -32,7 +33,12 @@ class Yaz0Node(nodes.File):
 
 	def createChildren(self):
 		file = yaz0.Yaz0File()
-		file.parse(self.reader.read())
+
+		try:
+			file.parse(self.reader.read())
+		except ParseError:
+			return
+		
 		reader = Yaz0Reader(file)
 		self.addChild(self.plugins.create(reader))
 

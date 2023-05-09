@@ -1,4 +1,5 @@
 
+from jungle.error import ParseError
 from jungle.agl import pmaa
 from jungle.db import hashes
 import nodes
@@ -42,7 +43,10 @@ class PMAANode(nodes.File):
 		self.reader = reader
 
 		self.file = pmaa.PMAAFile()
-		self.file.parse(reader.read())
+		try:
+			self.file.parse(reader.read())
+		except ParseError:
+			self.file = None
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("ri.landscape-fill", color="#00c"))
@@ -51,9 +55,10 @@ class PMAANode(nodes.File):
 		return self.reader.read()
 
 	def createWidgets(self):
-		return {
-			"Metadata": PMAAWidget(self.file)
-		}
+		widgets = {}
+		if self.file:
+			widgets["Parameters"] = PMAAWidget(self.file)
+		return widgets
 
 
 class PMAAPlugin:

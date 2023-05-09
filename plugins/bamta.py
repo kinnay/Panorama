@@ -1,4 +1,5 @@
 
+from jungle.error import ParseError
 from jungle.aal import bamta
 import nodes
 import properties
@@ -78,7 +79,10 @@ class BAMTANode(nodes.File):
 		self.reader = reader
 
 		self.file = bamta.BAMTAFile()
-		self.file.parse(reader.read())
+		try:
+			self.file.parse(reader.read())
+		except ParseError:
+			self.file = None
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color="#c00"))
@@ -87,9 +91,10 @@ class BAMTANode(nodes.File):
 		return self.reader.read()
 
 	def createWidgets(self):
-		return {
-			"Metadata": BAMTAWidget(self.file)
-		}
+		widgets = {}
+		if self.file:
+			widgets["Metadata"] = BAMTAWidget(self.file)
+		return widgets
 
 
 class BAMTAPlugin:
