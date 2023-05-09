@@ -1,5 +1,5 @@
 
-from jungle import sarc
+from jungle.sead import sarc
 import qtawesome
 import nodes
 
@@ -7,9 +7,9 @@ import nodes
 class SARCUnnamedFilesNode(nodes.Node):
 	def __init__(self, plugins, file):
 		super().__init__()
-		self.setText(0, "<unnamed files>")
+		self.setText(0, "Unnamed Files")
 
-		for hash in self.file.unnamed_files:
+		for hash in file.unnamed_files:
 			reader = nodes.MemoryReader("%08x" %hash, file.unnamed_files[hash])
 			self.addChild(plugins.create(reader))
 

@@ -1,5 +1,5 @@
 
-from jungle import yaz0
+from jungle.sead import yaz0
 from ninty.yaz0 import decompress
 import nodes
 import qtawesome
