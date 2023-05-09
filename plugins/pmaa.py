@@ -38,9 +38,8 @@ class PMAAWidget(properties.PropertyView):
 
 class PMAANode(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.file = pmaa.PMAAFile()
 		try:
@@ -50,9 +49,6 @@ class PMAANode(nodes.File):
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("ri.landscape-fill", color="#00c"))
-
-	def read(self):
-		return self.reader.read()
 
 	def createWidgets(self):
 		widgets = {}

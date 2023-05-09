@@ -26,8 +26,12 @@ class Node(QTreeWidgetItem):
 
 
 class File(Node):
+	def __init__(self, reader):
+		super().__init__()
+		self.reader = reader
+
 	def read(self):
-		return b""
+		return self.reader.read()
 
 
 class Reader:

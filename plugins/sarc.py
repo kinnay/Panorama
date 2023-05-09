@@ -41,9 +41,8 @@ class SARCFolderNode(nodes.Node):
 
 class SARCNode(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#a50"))
@@ -73,9 +72,6 @@ class SARCNode(nodes.File):
 		
 		if self.file.unnamed_files:
 			self.addChild(SARCUnnamedFilesNode(self.plugins, self.file))
-	
-	def read(self):
-		return self.reader.read()
 
 
 class SARCPlugin:

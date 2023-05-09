@@ -74,9 +74,8 @@ class BAMTAWidget(properties.PropertyView):
 
 class BAMTANode(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.file = bamta.BAMTAFile()
 		try:
@@ -86,9 +85,6 @@ class BAMTANode(nodes.File):
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color="#c00"))
-
-	def read(self):
-		return self.reader.read()
 
 	def createWidgets(self):
 		widgets = {}

@@ -13,7 +13,7 @@ class BARSAssetNode(nodes.Node):
 		try:
 			metadata.parse(asset.metadata)
 		except ParseError:
-			self.setText(0, "?")
+			self.setText(0, "%08x" %hash)
 		else:
 			self.setText(0, metadata.name)
 
@@ -27,9 +27,8 @@ class BARSAssetNode(nodes.Node):
 
 class BARSNode(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#c00"))
@@ -43,9 +42,6 @@ class BARSNode(nodes.File):
 		for hash, asset in self.file.assets.items():
 			self.addChild(BARSAssetNode(self.plugins, hash, asset))
 	
-	def read(self):
-		return self.reader.read()
-
 
 class BARSPlugin:
 	def analyze(self, data):

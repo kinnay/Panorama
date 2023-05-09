@@ -19,17 +19,13 @@ class Yaz0Reader(nodes.Reader):
 
 class Yaz0Node(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.setText(0, self.reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#888"))
 
 		self.showIndicator(True)
-	
-	def read(self):
-		return self.reader.read()
 
 	def createChildren(self):
 		file = yaz0.Yaz0File()

@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
 	def initializeWorkspace(self):
 		self.workspaceView = workspace.WorkspaceView(self.plugins, self.settings)
 		self.workspaceView.itemActivated.connect(self.handleItemActivated)
+		self.workspaceView.itemRemoved.connect(self.handleItemRemoved)
 
 		self.workspacePaths = self.settings.value("workspace.paths", [])
 		for path in self.workspacePaths:
@@ -141,6 +142,10 @@ class MainWindow(QMainWindow):
 			for name, widget in widgets.items():
 				tabs.addTab(widget, name)
 			self.setCentralWidget(tabs)
+	
+	def handleItemRemoved(self, path):
+		self.workspacePaths.remove(path)
+		self.settings.setValue("workspace.paths", self.workspacePaths)
 
 
 if __name__ == "__main__":

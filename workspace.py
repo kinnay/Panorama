@@ -6,6 +6,7 @@ import filesystem
 import nodes
 import os
 import qtawesome
+import signals
 
 
 class InvalidItem(nodes.Node):
@@ -36,10 +37,17 @@ class WorkspaceView(QTreeWidget):
 
 		self.itemExpanded.connect(self.handleItemExpanded)
 
+		self.itemRemoved = signals.Signal()
+
 	def contextMenuEvent(self, e):
 		menu = QMenu(self)
 
 		item = self.itemAt(e.pos())
+
+		if item and item.parent() is None:
+			remove = Action("Remove", lambda: self.handleRemove(item))
+			menu.addAction(remove)
+		
 		if isinstance(item, nodes.File):
 			extract = Action("Extract", lambda: self.handleExtract(item))
 			menu.addAction(extract)
@@ -63,6 +71,17 @@ class WorkspaceView(QTreeWidget):
 		# create them now.
 		item.expand()
 	
+	def handleRemove(self, item):
+		index = self.indexOfTopLevelItem(item)
+		self.takeTopLevelItem(index)
+
+		if isinstance(item, filesystem.Folder):
+			self.itemRemoved.emit(item.path)
+		elif isinstance(item, nodes.File):
+			self.itemRemoved.emit(item.reader.path)
+		elif isinstance(item, InvalidItem):
+			self.itemRemoved.emit(item.path)
+
 	def handleExtract(self, item):
 		default = os.path.join(self.settings.value("filesystem.extract_path"), item.text(0))
 		

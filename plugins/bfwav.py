@@ -382,9 +382,8 @@ class BFWAVWidget(QWidget):
 
 class BFWAVNode(nodes.File):
 	def __init__(self, plugins, reader):
-		super().__init__()
+		super().__init__(reader)
 		self.plugins = plugins
-		self.reader = reader
 
 		self.file = bfwav.BFWAVFile()
 		try:
@@ -394,9 +393,6 @@ class BFWAVNode(nodes.File):
 
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.volume-up", color="#c00"))
-	
-	def read(self):
-		return self.reader.read()
 	
 	def createWidgets(self):
 		widgets = {}
