@@ -7,6 +7,16 @@ class Node(QTreeWidgetItem):
 		super().__init__()
 		self.childrenCreated = False
 	
+	def __lt__(self, other):
+		if self.priority() < other.priority():
+			return True
+		if self.priority() > other.priority():
+			return False
+		return super().__lt__(other)
+
+	def priority(self):
+		return 0
+
 	def showIndicator(self, shown):
 		if shown:
 			self.setChildIndicatorPolicy(QTreeWidgetItem.ChildIndicatorPolicy.ShowIndicator)

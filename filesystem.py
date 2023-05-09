@@ -37,6 +37,10 @@ class Folder(nodes.Node):
 
 		self.showIndicator(os.listdir(self.path))
 	
+	def priority(self):
+		# Show folders before everything else
+		return -1
+
 	def createChildren(self):
 		for name in os.listdir(self.path):
 			childpath = os.path.join(self.path, name)
