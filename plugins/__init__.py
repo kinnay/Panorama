@@ -6,14 +6,9 @@ import qtawesome
 
 class DefaultNode(nodes.File):
 	def __init__(self, reader):
-		super().__init__()
-		self.reader = reader
-
+		super().__init__(reader)
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.file"))
-	
-	def read(self):
-		return self.reader.read()
 
 
 class DefaultPlugin:
