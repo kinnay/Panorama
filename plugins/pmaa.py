@@ -25,7 +25,7 @@ class PMAAWidget(properties.PropertyView):
 		for child in list.children:
 			props[self.makeName(child.hash)] = self.makeList(child)
 		for object in list.objects:
-			props["%s:%s" %(self.makeName(object.group_hash), self.makeName(object.hash))] = self.makeObject(object)
+			props["%s (%s)" %(self.makeName(object.hash), self.makeName(object.type_hash))] = self.makeObject(object)
 		return props
 
 	def makeObject(self, object):
