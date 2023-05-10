@@ -3,7 +3,19 @@ from jungle.error import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
 import nodes
+import properties
 import qtawesome
+
+
+class Yaz0Widget(properties.PropertyView):
+	def __init__(self, file):
+		super().__init__()
+
+		self.setProperties({
+			"Alignment": file.alignment,
+			"Decompressed size": file.size,
+			"Compressed size": "%i (%i%%)" %(len(file.data), len(file.data) / file.size * 100),
+		})
 
 
 class Yaz0Reader(nodes.Reader):
@@ -25,18 +37,32 @@ class Yaz0Node(nodes.File):
 		self.setText(0, self.reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#888"))
 
+		self.error = False
+		self.file = None
+
 		self.showIndicator(True)
+	
+	def loadFile(self):
+		if self.file is None and not self.error:
+			try:
+				self.file = yaz0.Yaz0File()
+				self.file.parse(self.reader.read())
+			except ParseError:
+				self.file = None
+				self.error = True
 
 	def createChildren(self):
-		file = yaz0.Yaz0File()
+		self.loadFile()
 
-		try:
-			file.parse(self.reader.read())
-		except ParseError:
-			return
-		
-		reader = Yaz0Reader(file)
-		self.addChild(self.plugins.create(reader))
+		if self.file:
+			reader = Yaz0Reader(self.file)
+			self.addChild(self.plugins.create(reader))
+	
+	def createWidgets(self):
+		self.loadFile()
+		if self.file:
+			return {"Yaz0": Yaz0Widget(self.file)}
+		return {}
 
 
 class Yaz0Plugin:
