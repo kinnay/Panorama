@@ -1,5 +1,5 @@
 
-from jungle.error import ParseError
+from jungle.errors import ParseError
 from jungle.agl import pmaa
 from jungle.db import hashes
 import nodes

@@ -2,7 +2,7 @@
 from PyQt6.QtCore import *
 from PyQt6.QtMultimedia import *
 from PyQt6.QtWidgets import *
-from jungle.error import ParseError
+from jungle.errors import ParseError
 from jungle.nw import bfwav
 from ninty import audio
 import nodes

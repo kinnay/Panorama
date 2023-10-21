@@ -1,5 +1,5 @@
 
-from jungle.error import ParseError
+from jungle.errors import ParseError
 from jungle.sead import sarc
 import qtawesome
 import nodes

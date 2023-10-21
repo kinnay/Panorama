@@ -1,5 +1,5 @@
 
-from jungle.error import ParseError
+from jungle.errors import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
 import nodes
