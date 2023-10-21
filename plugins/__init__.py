@@ -1,5 +1,5 @@
 
-from plugins import bamta, bars, bfwav, pmaa, sarc, yaz0
+from plugins import bamta, bars, bfwav, pmaa, sarc, yaz0, zstd
 import nodes
 import qtawesome
 
@@ -27,7 +27,8 @@ class Plugins:
 			bfwav.BFWAVPlugin(),
 			pmaa.PMAAPlugin(),
 			sarc.SARCPlugin(),
-			yaz0.Yaz0Plugin()
+			yaz0.Yaz0Plugin(),
+			zstd.ZstdPlugin()
 		]
 		self.default = DefaultPlugin()
 	
