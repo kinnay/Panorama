@@ -59,15 +59,17 @@ class BinaryView(QTextEdit):
 		self.viewChanged = signals.Signal()
 		self.wheel = signals.Signal()
 		self.scroll = signals.Signal()
+		self.jump = signals.Signal()
 
 		self.data = data
 
 		self.base = 0
+		self.rows = 0
 		self.end = 0
 
-		self.cursorAddr = 0
-		self.cursorOffset = 0
-		self.cursorAscii = False
+		self.cursorAddr = 0 # Address of the cursor
+		self.cursorOffset = 0 # Position of the cursor in the current byte
+		self.cursorAscii = False # Whether the cursor is active in the hex or ascii view
 
 		self.selectionAnchor = 0
 		self.selectionStart = 0
@@ -128,6 +130,18 @@ class BinaryView(QTextEdit):
 				self.cursorAddr += 16
 			self.clearSelection()
 		
+		elif e.key() == Qt.Key_PageUp:
+			maxRows = self.cursorAddr // 16
+			self.cursorAddr -= min(maxRows, self.rows) * 16
+			self.scroll.emit(-self.rows)
+			self.clearSelection()
+		
+		elif e.key() == Qt.Key_PageDown:
+			maxRows = (len(self.data) - self.cursorAddr) // 16
+			self.cursorAddr += min(maxRows, self.rows) * 16
+			self.scroll.emit(self.rows)
+			self.clearSelection()
+		
 		elif e.key() == Qt.Key_Home:
 			self.cursorAddr &= ~15
 			self.cursorOffset = 0
@@ -144,6 +158,12 @@ class BinaryView(QTextEdit):
 				self.cursorOffset = 2 - self.cursorView
 			
 			self.clearSelection()
+		
+		if self.cursorAddr < self.base:
+			self.jump.emit(self.cursorAddr & ~0xF)
+		elif self.cursorAddr >= self.end:
+			addr = (self.cursorAddr & ~0xF) - (self.rows - 1) * 16
+			self.jump.emit(addr)
 
 	def clearSelection(self):
 		addr = self.selectionAddr(self.cursorAddr, self.cursorOffset, self.cursorView)
@@ -315,6 +335,7 @@ class BinaryView(QTextEdit):
 	
 	def setRange(self, offset, rows):
 		self.base = offset
+		self.rows = rows
 		self.end = min(offset + rows * 16, len(self.data) + 1)
 		self.updateText()
 
@@ -341,6 +362,7 @@ class BinaryWidget(QWidget):
 		self.view.viewChanged.connect(self.updateView)
 		self.view.wheel.connect(self.scrollBar.wheelEvent)
 		self.view.scroll.connect(self.moveScroll)
+		self.view.jump.connect(self.handleJump)
 
 		self.layout = QHBoxLayout(self)
 		self.layout.addWidget(self.view)
@@ -350,13 +372,17 @@ class BinaryWidget(QWidget):
 	
 	def moveScroll(self, offset):
 		self.scrollBar.setValue(self.scrollBar.value() + offset)
+		self.updateView()
 
-	def updateView(self):
-		offset = self.scrollBar.value() * 16
+	def handleJump(self, address):
 		rows = int((self.view.height() - 10) / (self.metrics.lineSpacing() + 1)) - 2
 
-		self.view.setRange(offset, rows)
+		self.view.setRange(address, rows)
 
 		scroll = max((len(self.data) + 15) // 16 - rows, 0)
 		self.scrollBar.setVisible(scroll != 0)
 		self.scrollBar.setRange(0, scroll)
+
+	def updateView(self):
+		offset = self.scrollBar.value() * 16
+		self.handleJump(offset)
