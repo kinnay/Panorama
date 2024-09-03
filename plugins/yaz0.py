@@ -5,6 +5,7 @@ from ninty.yaz0 import decompress
 import nodes
 import properties
 import qtawesome
+import utils
 
 
 class Yaz0Widget(properties.PropertyView):

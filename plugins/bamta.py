@@ -19,7 +19,7 @@ class BAMTAWidget(properties.PropertyView):
 		self.ext = []
 
 		props = {
-			"Endianness": "big" if file.endianness == ">" else "Little",
+			"Endianness": "Big" if file.endianness == ">" else "Little",
 			"Version": "0x%X" %file.version,
 			"Name": file.name,
 			"Type:": AssetTypes[file.type],

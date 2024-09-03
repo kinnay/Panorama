@@ -3,6 +3,20 @@ from jungle.errors import ParseError
 from jungle.sead import sarc
 import qtawesome
 import nodes
+import properties
+
+
+class SARCWidget(properties.PropertyView):
+	def __init__(self, file):
+		super().__init__()
+
+		self.setProperties({
+			"Endianness": "Big" if file.endianness == ">" else "Little",
+			"File format version": "%i.%i" %(file.version >> 8, file.version & 0xFF),
+			"Hash multiplier": file.hash_multiplier,
+			"Detected alignment": file.alignment,
+			"Number of files": len(file.files) + len(file.unnamed_files)
+		})
 
 
 class SARCUnnamedFilesNode(nodes.Node):
@@ -47,11 +61,11 @@ class SARCNode(nodes.File):
 		self.setText(0, reader.text())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color="#a50"))
 
-		self.file = sarc.SARCFile()
-
 		try:
+			self.file = sarc.SARCFile()
 			self.file.parse(reader.read())
 		except ParseError:
+			self.file = None
 			return
 
 		files = []
@@ -72,6 +86,11 @@ class SARCNode(nodes.File):
 		
 		if self.file.unnamed_files:
 			self.addChild(SARCUnnamedFilesNode(self.plugins, self.file))
+	
+	def createWidgets(self):
+		if self.file:
+			return {"SARC": SARCWidget(self.file)}
+		return {}
 
 
 class SARCPlugin:
