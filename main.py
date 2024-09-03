@@ -149,6 +149,8 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+	sys.argv += ["-platform", "xcb"]
+	
 	app = QApplication(sys.argv)
 	settings = QSettings("Yannik Marchand", "Panorama")
 	window = MainWindow(settings)
