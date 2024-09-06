@@ -83,7 +83,7 @@ class WorkspaceView(QTreeWidget):
 			self.itemRemoved.emit(item.path)
 
 	def handleExtract(self, item):
-		default = os.path.join(self.settings.value("filesystem.extract_path"), item.text(0))
+		default = os.path.join(self.settings.value("filesystem.extract_path", ""), item.text(0))
 		
 		path, filter = QFileDialog.getSaveFileName(
 			self, "Extract file", default, "All files (*.*)"

@@ -1,18 +1,18 @@
 
 from jungle.errors import ParseError
-from jungle.aal import bamta
+from jungle.aal import bameta
 import nodes
 import properties
 import qtawesome
 
 
 AssetTypes = {
-	bamta.AssetType.WAVE: "Wave",
-	bamta.AssetType.STREAM: "Stream"
+	bameta.AssetType.WAVE: "Wave",
+	bameta.AssetType.STREAM: "Stream"
 }
 
 
-class BAMTAWidget(properties.PropertyView):
+class BAMETAWidget(properties.PropertyView):
 	def __init__(self, file):
 		super().__init__()
 
@@ -27,10 +27,10 @@ class BAMTAWidget(properties.PropertyView):
 			"Number of samples": file.num_samples,
 			"Number of samples (48000 Hz)": file.num_output_samples,
 			"Sample rate": file.sample_rate,
-			"Is looped": "Yes" if file.flags & bamta.Flags.LOOPED else "No"
+			"Is looped": "Yes" if file.flags & bameta.Flags.LOOPED else "No"
 		}
 
-		if file.flags & bamta.Flags.LOOPED:
+		if file.flags & bameta.Flags.LOOPED:
 			props["Loop start sample"] = file.loop_start
 		
 		props["Unknown flag 1"] = "Yes" if file.flags & 1 else "No"
@@ -72,12 +72,12 @@ class BAMTAWidget(properties.PropertyView):
 		self.setProperties(props)
 
 
-class BAMTANode(nodes.File):
+class BAMETANode(nodes.File):
 	def __init__(self, plugins, reader):
 		super().__init__(reader)
 		self.plugins = plugins
 
-		self.file = bamta.BAMTAFile()
+		self.file = bameta.BAMETAFile()
 		try:
 			self.file.parse(reader.read())
 		except ParseError:
@@ -89,13 +89,13 @@ class BAMTANode(nodes.File):
 	def createWidgets(self):
 		widgets = {}
 		if self.file:
-			widgets["Metadata"] = BAMTAWidget(self.file)
+			widgets["Metadata"] = BAMETAWidget(self.file)
 		return widgets
 
 
-class BAMTAPlugin:
+class BAMETAPlugin:
 	def analyze(self, data):
 		return data[:4] == b"AMTA"
 
 	def create(self, plugins, reader):
-		return BAMTANode(plugins, reader)
+		return BAMETANode(plugins, reader)

@@ -1,15 +1,28 @@
 
 from jungle.errors import ParseError
-from jungle.aal import bars, bamta
+from jungle.aal import bars, bameta
 import qtawesome
 import nodes
+import properties
+
+
+class BARSWidget(properties.PropertyView):
+	def __init__(self, file):
+		super().__init__()
+
+		props = {
+			"Endianness": "Big" if file.endianness == ">" else "Little",
+			"File format version": "%i.%i" %(file.version >> 8, file.version & 0xFF),
+			"Number of assets": len(file.assets)
+		}
+		self.setProperties(props)
 
 
 class BARSAssetNode(nodes.Node):
 	def __init__(self, plugins, hash, asset):
 		super().__init__()
 
-		metadata = bamta.BAMTAFile()
+		metadata = bameta.BAMETAFile()
 		try:
 			metadata.parse(asset.metadata)
 		except ParseError:
@@ -41,6 +54,12 @@ class BARSNode(nodes.File):
 
 		for hash, asset in self.file.assets.items():
 			self.addChild(BARSAssetNode(self.plugins, hash, asset))
+	
+	def createWidgets(self):
+		widgets = {}
+		if self.file:
+			widgets["BARS"] = BARSWidget(self.file)
+		return widgets
 	
 
 class BARSPlugin:

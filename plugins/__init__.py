@@ -1,5 +1,5 @@
 
-from plugins.aal import bamta, bars, barslist
+from plugins.aal import bameta, bars, barslist
 from plugins.agl import pmaa
 from plugins.nw import bfwav
 from plugins.sead import sarc, yaz0
@@ -26,7 +26,7 @@ class DefaultPlugin:
 class Plugins:
 	def __init__(self):
 		self.plugins = [
-			bamta.BAMTAPlugin(),
+			bameta.BAMETAPlugin(),
 			bars.BARSPlugin(),
 			barslist.BARSLISTPlugin(),
 			bfwav.BFWAVPlugin(),

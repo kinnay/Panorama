@@ -48,7 +48,7 @@ class PropertyView(QTreeWidget):
 	
 	def addProperty(self, parent, key, value):
 		if isinstance(value, list):
-			item = QTreeWidgetItem(parent, [key])
+			item = QTreeWidgetItem(parent, [key, "# %i" %len(value)])
 			self.addList(value, item)
 		elif isinstance(value, dict):
 			item = QTreeWidgetItem(parent, [key])
