@@ -1,35 +1,19 @@
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+import widgets
 
 
-Stylesheet = """
-QTreeWidget {
-	alternate-background-color: #f0f0f0;
-	background: white;
-}
-"""
-
-
-class PropertyView(QTreeWidget):
+class PropertyView(widgets.ScaledTreeWidget):
 	def __init__(self, props=None):
 		super().__init__()
 		self.setHeaderLabels(["Field", "Value"])
-		self.setStyleSheet(Stylesheet)
 		self.setAlternatingRowColors(True)
 
-		font = QFont("Monospace")
-		font.setPixelSize(14)
-		self.setFont(font)
-
-		self.ratio = .5
+		self.setRatios([.5, .5])
 
 		if props is not None:
 			self.setProperties(props)
-
-	def resizeEvent(self, e):
-		size = e.size()
-		self.setColumnWidth(0, int(size.width() * self.ratio))
 
 	def setProperties(self, props):
 		self.clear()

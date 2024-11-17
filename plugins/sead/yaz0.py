@@ -2,10 +2,10 @@
 from jungle.errors import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
+import colors
 import nodes
 import properties
 import qtawesome
-import utils
 
 
 class Yaz0Widget(properties.PropertyView):
@@ -36,7 +36,7 @@ class Yaz0Node(nodes.File):
 		self.plugins = plugins
 
 		self.setText(0, self.reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.box", color="#888"))
+		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.COMPRESSION))
 
 		self.error = False
 		self.file = None

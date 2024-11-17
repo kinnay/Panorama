@@ -2,6 +2,7 @@
 from jungle.errors import ParseError
 from jungle.agl import pmaa
 from jungle.db import hashes
+import colors
 import nodes
 import properties
 import qtawesome
@@ -48,7 +49,7 @@ class PMAANode(nodes.File):
 			self.file = None
 
 		self.setText(0, reader.text())
-		self.setIcon(0, qtawesome.icon("ri.landscape-fill", color="#00c"))
+		self.setIcon(0, qtawesome.icon("ri.landscape-fill", color=colors.PROPERTIES))
 
 	def createWidgets(self):
 		widgets = {}

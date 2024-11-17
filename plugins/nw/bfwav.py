@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.nw import bfwav
 from ninty import audio
+import colors
 import nodes
 import properties
 import qtawesome
@@ -392,7 +393,7 @@ class BFWAVNode(nodes.File):
 			self.file = None
 
 		self.setText(0, reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.volume-up", color="#c00"))
+		self.setIcon(0, qtawesome.icon("fa5s.volume-up", color=colors.AUDIO))
 	
 	def createWidgets(self):
 		widgets = {}

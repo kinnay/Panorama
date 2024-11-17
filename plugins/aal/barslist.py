@@ -1,6 +1,7 @@
 
 from jungle.errors import ParseError
 from jungle.aal import barslist
+import colors
 import nodes
 import properties
 import qtawesome
@@ -31,7 +32,7 @@ class BARSLISTNode(nodes.File):
 			self.file = None
 
 		self.setText(0, reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.file", color="#c00"))
+		self.setIcon(0, qtawesome.icon("fa5s.file", color=colors.AUDIO))
 
 	def createWidgets(self):
 		widgets = {}

@@ -1,9 +1,10 @@
 
 from jungle.errors import ParseError
 from jungle.aal import bars, bameta
-import qtawesome
+import colors
 import nodes
 import properties
+import qtawesome
 
 
 class BARSWidget(properties.PropertyView):
@@ -44,7 +45,7 @@ class BARSNode(nodes.File):
 		self.plugins = plugins
 
 		self.setText(0, reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.box", color="#c00"))
+		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.AUDIO))
 
 		self.file = bars.BARSFile()
 		try:

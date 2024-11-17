@@ -1,9 +1,10 @@
 
 from jungle.errors import ParseError
 from jungle.sead import sarc
-import qtawesome
+import colors
 import nodes
 import properties
+import qtawesome
 
 
 class SARCWidget(properties.PropertyView):
@@ -59,7 +60,7 @@ class SARCNode(nodes.File):
 		self.plugins = plugins
 
 		self.setText(0, reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.box", color="#a50"))
+		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.ARCHIVE))
 
 		try:
 			self.file = sarc.SARCFile()

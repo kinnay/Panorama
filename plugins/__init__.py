@@ -1,6 +1,7 @@
 
 from plugins.aal import bameta, bars, barslist
 from plugins.agl import pmaa
+from plugins.common import byaml
 from plugins.nw import bfwav
 from plugins.sead import sarc, yaz0
 from plugins import zstd
@@ -30,6 +31,7 @@ class Plugins:
 			bars.BARSPlugin(),
 			barslist.BARSLISTPlugin(),
 			bfwav.BFWAVPlugin(),
+			byaml.BYAMLPlugin(),
 			pmaa.PMAAPlugin(),
 			sarc.SARCPlugin(),
 			yaz0.Yaz0Plugin(),

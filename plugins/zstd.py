@@ -1,6 +1,5 @@
 
-from jungle.errors import ParseError
-from jungle.sead import yaz0
+import colors
 import nodes
 import properties
 import qtawesome
@@ -23,7 +22,7 @@ class ZstdNode(nodes.File):
 		self.plugins = plugins
 
 		self.setText(0, self.reader.text())
-		self.setIcon(0, qtawesome.icon("fa5s.box", color="#888"))
+		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.COMPRESSION))
 
 		self.error = False
 		self.compressed = None
