@@ -150,7 +150,7 @@ class BinaryView(QTextEdit):
 			self.cursorOffset = 0
 			if self.cursorAddr % 16 == 0 and self.cursorAddr != 0:
 				self.cursorAddr -= 1
-				self.cursorOffset = 2 - self.cursorView
+				self.cursorOffset = 2 - self.cursorAscii
 		
 		if key in [
 			Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down,
@@ -171,7 +171,7 @@ class BinaryView(QTextEdit):
 			self.jump.emit(addr)
 
 	def clearSelection(self):
-		addr = self.selectionAddr(self.cursorAddr, self.cursorOffset, self.cursorView)
+		addr = self.selectionAddr(self.cursorAddr, self.cursorOffset, self.cursorAscii)
 		self.selectionAnchor = addr
 		self.selectionStart = addr
 		self.selectionEnd = addr
@@ -182,17 +182,17 @@ class BinaryView(QTextEdit):
 	def mousePressEvent(self, e):
 		if e.button() == Qt.LeftButton:
 			cursor = self.cursorForPosition(e.pos())
-			self.cursorAddr, self.cursorOffset, self.cursorView = \
+			self.cursorAddr, self.cursorOffset, self.cursorAscii = \
 				self.getCursorInfo(cursor.position())
 			
 			self.clampCursor()
 			
 			self.selectionAnchor = self.selectionAddr(
-				self.cursorAddr, self.cursorOffset, self.cursorView
+				self.cursorAddr, self.cursorOffset, self.cursorAscii
 			)
 			self.selectionStart = self.selectionAnchor
 			self.selectionEnd = self.selectionAnchor
-			self.selectionView = self.cursorView
+			self.selectionAscii = self.cursorAscii
 			
 			self.updateText()
 
@@ -201,13 +201,13 @@ class BinaryView(QTextEdit):
 			self.mousePos = e.y()
 			
 			cursor = self.cursorForPosition(e.pos())
-			self.cursorAddr, self.cursorOffset, self.cursorView = \
-				self.getCursorInfo(cursor.position(), self.cursorView)
+			self.cursorAddr, self.cursorOffset, self.cursorAscii = \
+				self.getCursorInfo(cursor.position(), self.cursorAscii)
 			
 			self.clampCursor()
 			
 			selectionPos = self.selectionAddr(
-				self.cursorAddr, self.cursorOffset, self.cursorView
+				self.cursorAddr, self.cursorOffset, self.cursorAscii
 			)
 			self.moveSelectionTo(selectionPos)
 			
@@ -240,7 +240,7 @@ class BinaryView(QTextEdit):
 			self.cursorOffset = 0
 			if self.cursorAddr % 16 == 0 and self.cursorAddr != 0:
 				self.cursorAddr -= 1
-				if self.cursorView:
+				if self.cursorAscii:
 					self.cursorOffset = 1
 				else:
 					self.cursorOffset = 2
