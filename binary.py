@@ -107,47 +107,42 @@ class BinaryView(QTextEdit):
 		self.updateText()
 
 	def handleKeyPress(self, e):
-		if e.key() == Qt.Key_Left:
+		key = e.key()
+
+		if key == Qt.Key_Left:
 			if self.cursorOffset != 0:
 				self.cursorOffset = 0
 			elif self.cursorAddr > 0:
 				self.cursorAddr -= 1
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_Right:
+		elif key == Qt.Key_Right:
 			self.cursorOffset = 0
 			if self.cursorAddr < len(self.data):
 				self.cursorAddr += 1
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_Up:
+		elif key == Qt.Key_Up:
 			if self.cursorAddr >= 16:
 				self.cursorAddr -= 16
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_Down:
+		elif key == Qt.Key_Down:
 			if self.cursorAddr <= len(self.data) - 16:
 				self.cursorAddr += 16
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_PageUp:
+		elif key == Qt.Key_PageUp:
 			maxRows = self.cursorAddr // 16
 			self.cursorAddr -= min(maxRows, self.rows) * 16
 			self.scroll.emit(-self.rows)
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_PageDown:
+		elif key == Qt.Key_PageDown:
 			maxRows = (len(self.data) - self.cursorAddr) // 16
 			self.cursorAddr += min(maxRows, self.rows) * 16
 			self.scroll.emit(self.rows)
-			self.clearSelection()
 		
-		elif e.key() == Qt.Key_Home:
+		elif key == Qt.Key_Home:
 			self.cursorAddr &= ~15
 			self.cursorOffset = 0
-			self.clearSelection()
 			
-		elif e.key() == Qt.Key_End:
+		elif key == Qt.Key_End:
 			self.cursorAddr = ((self.cursorAddr + 16) & ~15)
 			if self.cursorAddr > len(self.data):
 				self.cursorAddr = len(self.data)
@@ -156,8 +151,18 @@ class BinaryView(QTextEdit):
 			if self.cursorAddr % 16 == 0 and self.cursorAddr != 0:
 				self.cursorAddr -= 1
 				self.cursorOffset = 2 - self.cursorView
-			
-			self.clearSelection()
+		
+		if key in [
+			Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down,
+			Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End
+		]:
+			modifiers = e.modifiers()
+			shift = bool(modifiers & Qt.ShiftModifier)
+
+			if shift:
+				self.moveSelectionTo(self.cursorAddr)
+			else:
+				self.clearSelection()
 		
 		if self.cursorAddr < self.base:
 			self.jump.emit(self.cursorAddr & ~0xF)
@@ -204,19 +209,21 @@ class BinaryView(QTextEdit):
 			selectionPos = self.selectionAddr(
 				self.cursorAddr, self.cursorOffset, self.cursorView
 			)
-			
-			if selectionPos < self.selectionAnchor:
-				self.selectionStart = selectionPos
-				self.selectionEnd = self.selectionAnchor
-			else:
-				self.selectionStart = self.selectionAnchor
-				self.selectionEnd = selectionPos
+			self.moveSelectionTo(selectionPos)
 			
 			self.updateText()
 
 	def mouseReleaseEvent(self, e):
 		if e.button() == Qt.LeftButton:
 			self.mousePos = 0
+		
+	def moveSelectionTo(self, addr):
+		if addr < self.selectionAnchor:
+			self.selectionStart = addr
+			self.selectionEnd = self.selectionAnchor
+		else:
+			self.selectionStart = self.selectionAnchor
+			self.selectionEnd = addr
 
 	def selectionAddr(self, pos, offset, view):
 		if pos % 16 == 15:
