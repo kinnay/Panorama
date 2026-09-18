@@ -10,19 +10,19 @@ import widgets
 
 
 TypeNames = {
-	byaml.NodeType.HASHMAP: "Hash",
-	byaml.NodeType.STRING: "String",
-	byaml.NodeType.BINARY: "Binary",
-	byaml.NodeType.ARRAY: "Array",
-	byaml.NodeType.DICT: "Dict",
-	byaml.NodeType.BOOL: "Bool",
-	byaml.NodeType.INT: "Int",
-	byaml.NodeType.FLOAT: "Float",
-	byaml.NodeType.UINT: "UInt",
-	byaml.NodeType.INT64: "Int64",
-	byaml.NodeType.UINT64: "UInt64",
-	byaml.NodeType.DOUBLE: "Double",
-	byaml.NodeType.NULL: "Null"
+	byaml.BYAMLNodeType.HASHMAP: "Hash",
+	byaml.BYAMLNodeType.STRING: "String",
+	byaml.BYAMLNodeType.BINARY: "Binary",
+	byaml.BYAMLNodeType.ARRAY: "Array",
+	byaml.BYAMLNodeType.DICT: "Dict",
+	byaml.BYAMLNodeType.BOOL: "Bool",
+	byaml.BYAMLNodeType.INT: "Int",
+	byaml.BYAMLNodeType.FLOAT: "Float",
+	byaml.BYAMLNodeType.UINT: "UInt",
+	byaml.BYAMLNodeType.INT64: "Int64",
+	byaml.BYAMLNodeType.UINT64: "UInt64",
+	byaml.BYAMLNodeType.DOUBLE: "Double",
+	byaml.BYAMLNodeType.NULL: "Null"
 }
 
 
@@ -31,7 +31,8 @@ class BYAMLWidget(widgets.ScaledTreeWidget):
 		super().__init__()
 		self.setHeaderLabels(["Field", "Value", "Type"])
 
-		QTreeWidgetItem(self, ["Endianness", "Big" if file.endianness == ">" else "Little", ""])
+		endianness = "Big" if file.endianness == ">" else "Little"
+		QTreeWidgetItem(self, ["Endianness", endianness, ""])
 		QTreeWidgetItem(self, ["Version", str(file.version), ""])
 		self.createItem(self, "Root", file.root)
 
@@ -47,20 +48,22 @@ class BYAMLWidget(widgets.ScaledTreeWidget):
 	
 	def addHashMap(self, parent, node):
 		for key, value in node.value.items():
-			self.createItem(parent, "%08x" %key, value)
+			self.createItem(parent, f"{key:08X}", value)
 	
 	def createItem(self, parent, key, node):
-		if node.type == byaml.NodeType.ARRAY:
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type]])
+		if isinstance(node, byaml.BYAMLArray):
+			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
 			self.addArray(item, node)
-		elif node.type == byaml.NodeType.DICT:
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type]])
+		elif isinstance(node, byaml.BYAMLDict):
+			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
 			self.addDictionary(item, node)
-		elif node.type == byaml.NodeType.HASHMAP:
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type]])
+		elif isinstance(node, byaml.BYAMLHashmap):
+			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
 			self.addHashMap(item, node)
 		else:
-			item = QTreeWidgetItem(parent, [key, str(node.value), TypeNames[node.type]])
+			item = QTreeWidgetItem(
+				parent, [key, str(node.value), TypeNames[node.type()]]
+			)
 
 
 class BYAMLNode(nodes.File):

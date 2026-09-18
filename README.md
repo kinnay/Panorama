@@ -28,7 +28,7 @@ Using this project requires the following packages to be installed:
 
 All packages, except for jungle, can be installed with `pip3 install PyQt6 QtAwesome ninty psutil zstd`.
 
-Jungle requires manual installation from commit `09ca34b5003ecdc81b4181ad148a2db9d2f9a884` of the Git repository.
+Jungle requires manual installation from the Git repository.
 
 ## Screenshots
 <div style="float: left">
