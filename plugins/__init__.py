@@ -1,6 +1,4 @@
 
-from collections.abc import Buffer
-
 from plugins.aal import bameta, bars, barslist
 from plugins.agl import pmaa
 from plugins.common import byaml
@@ -8,14 +6,13 @@ from plugins.nw import bfwav
 from plugins.sead import sarc, yaz0
 from plugins import zstd
 
-import mmap
 import nodes
 import qtawesome
 import typing
 
 
 class PluginType(typing.Protocol):
-	def analyze(self, data: Buffer) -> bool:
+	def analyze(self, data: bytes) -> bool:
 		...
 
 	def create(self, plugins: Plugins, reader: nodes.Reader) -> nodes.Node:
@@ -34,7 +31,7 @@ class DefaultPlugin:
 	This plugin is used when no other plugin is available for the file format.
 	"""
 
-	def analyze(self, data: Buffer) -> bool:
+	def analyze(self, data: bytes) -> bool:
 		return True
 	
 	def create(self, plugins: Plugins, reader: nodes.Reader):
@@ -59,7 +56,7 @@ class Plugins:
 		]
 		self._default = DefaultPlugin()
 	
-	def analyze(self, data: Buffer) -> PluginType:
+	def analyze(self, data: bytes) -> PluginType:
 		for plugin in self._plugins:
 			if plugin.analyze(data):
 				return plugin

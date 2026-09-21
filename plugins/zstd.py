@@ -1,60 +1,73 @@
 
+from PyQt6.QtWidgets import *
+
 import colors
 import nodes
+import plugins
 import properties
 import qtawesome
 import zstd
 
 
 class ZstdWidget(properties.PropertyView):
-	def __init__(self, compressed, decompressed):
+	def __init__(self, compressed: bytes, decompressed: bytes):
 		super().__init__()
+
+		ratio = len(compressed) / len(decompressed) * 100
 
 		self.setProperties({
 			"Decompressed size": len(decompressed),
-			"Compressed size": "%i (%i%%)" %(len(compressed), len(compressed) / len(decompressed) * 100)
+			"Compressed size": f"{len(compressed)} ({ratio}%)"
 		})
 
 
 class ZstdNode(nodes.File):
-	def __init__(self, plugins, reader):
-		super().__init__(reader)
-		self.plugins = plugins
+	_plugins: plugins.Plugins
 
-		self.setText(0, self.reader.filename())
+	_error: bool
+	_compressed: bytes | None
+	_decompressed: bytes | None
+
+	def __init__(self, plugins: plugins.Plugins, reader: nodes.Reader):
+		super().__init__(reader)
+		self._plugins = plugins
+
+		self.setText(0, self._reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.COMPRESSION))
 
-		self.error = False
-		self.compressed = None
-		self.decompressed = None
+		self._error = False
+		self._compressed = None
+		self._decompressed = None
 
 		self.showIndicator(True)
-	
-	def decompress(self):
-		if self.decompressed is None and not self.error:
-			self.compressed = self.reader.read()
-			try:
-				self.decompressed = zstd.decompress(bytes(self.compressed))
-			except zstd.Error:
-				self.error = True
 
-	def createChildren(self):
-		self.decompress()
+	def createChildren(self) -> None:
+		self._decompress()
 
-		if not self.error:
-			reader = nodes.MemoryReader("Content", self.decompressed)
-			self.addChild(self.plugins.create(reader))
+		if self._decompressed is not None:
+			reader = nodes.MemoryReader("Content", self._decompressed)
+			self.addChild(self._plugins.create(reader))
 	
-	def createWidgets(self):
-		self.decompress()
-		if not self.error:
-			return {"Zstd": ZstdWidget(self.compressed, self.decompressed)}
+	def createWidgets(self) -> dict[str, QWidget]:
+		self._decompress()
+		if self._compressed is not None and self._decompressed is not None:
+			return {"Zstd": ZstdWidget(self._compressed, self._decompressed)}
 		return {}
+
+	def _decompress(self) -> None:
+		if self._decompressed is None and not self._error:
+			self._compressed = bytes(self._reader.read())
+			try:
+				self._decompressed = zstd.decompress(self._compressed)
+			except zstd.Error:
+				self._error = True
 
 
 class ZstdPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:4] == b"\x28\xB5\x2F\xFD"
 
-	def create(self, plugins, reader):
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> ZstdNode:
 		return ZstdNode(plugins, reader)

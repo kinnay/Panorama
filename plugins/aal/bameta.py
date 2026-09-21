@@ -1,8 +1,10 @@
 
+from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import bameta
 import colors
 import nodes
+import plugins
 import properties
 import qtawesome
 
@@ -14,14 +16,12 @@ AssetTypes = {
 
 
 class BAMETAWidget(properties.PropertyView):
-	def __init__(self, file):
+	def __init__(self, file: bameta.BAMETAFile):
 		super().__init__()
-
-		self.ext = []
 
 		props = {
 			"Endianness": "Big" if file.endianness == ">" else "Little",
-			"Version": "0x%X" %file.version,
+			"Version": f"0x{file.version:X}",
 			"Name": file.name,
 			"Type:": AssetTypes[file.type],
 			"Number of channels": file.num_channels,
@@ -74,29 +74,31 @@ class BAMETAWidget(properties.PropertyView):
 
 
 class BAMETANode(nodes.File):
-	def __init__(self, plugins, reader):
-		super().__init__(reader)
-		self.plugins = plugins
+	_file: bameta.BAMETAFile | None
 
-		self.file = bameta.BAMETAFile()
+	def __init__(self, reader: nodes.Reader):
+		super().__init__(reader)
+		self._file = bameta.BAMETAFile()
 		try:
-			self.file.parse(reader.read())
+			self._file.parse(reader.read())
 		except ParseError:
-			self.file = None
+			self._file = None
 
 		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color=colors.AUDIO))
 
 	def createWidgets(self):
 		widgets = {}
-		if self.file:
-			widgets["Metadata"] = BAMETAWidget(self.file)
+		if self._file:
+			widgets["Metadata"] = BAMETAWidget(self._file)
 		return widgets
 
 
 class BAMETAPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:4] == b"AMTA"
 
-	def create(self, plugins, reader):
-		return BAMETANode(plugins, reader)
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> BAMETANode:
+		return BAMETANode(reader)

@@ -1,14 +1,16 @@
 
+from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import barslist
 import colors
 import nodes
+import plugins
 import properties
 import qtawesome
 
 
 class BARSLISTWidget(properties.PropertyView):
-	def __init__(self, file):
+	def __init__(self, file: barslist.BARSLISTFile):
 		super().__init__()
 
 		props = {
@@ -21,29 +23,31 @@ class BARSLISTWidget(properties.PropertyView):
 
 
 class BARSLISTNode(nodes.File):
-	def __init__(self, plugins, reader):
-		super().__init__(reader)
-		self.plugins = plugins
+	_file: barslist.BARSLISTFile | None
 
-		self.file = barslist.BARSLISTFile()
+	def __init__(self, reader: nodes.Reader):
+		super().__init__(reader)
+		self._file = barslist.BARSLISTFile()
 		try:
-			self.file.parse(reader.read())
+			self._file.parse(reader.read())
 		except ParseError:
-			self.file = None
+			self._file = None
 
 		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color=colors.AUDIO))
 
-	def createWidgets(self):
-		widgets = {}
-		if self.file:
-			widgets["BARSLIST"] = BARSLISTWidget(self.file)
+	def createWidgets(self) -> dict[str, QWidget]:
+		widgets: dict[str, QWidget] = {}
+		if self._file:
+			widgets["BARSLIST"] = BARSLISTWidget(self._file)
 		return widgets
 
 
 class BARSLISTPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:4] == b"ARSL"
 
-	def create(self, plugins, reader):
-		return BARSLISTNode(plugins, reader)
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> BARSLISTNode:
+		return BARSLISTNode(reader)

@@ -5,8 +5,12 @@ from jungle.common import byaml
 from jungle.errors import ParseError
 import colors
 import nodes
+import plugins
 import qtawesome
 import widgets
+
+
+type ParentItem = QTreeWidget | QTreeWidgetItem
 
 
 TypeNames = {
@@ -27,69 +31,78 @@ TypeNames = {
 
 
 class BYAMLWidget(widgets.ScaledTreeWidget):
-	def __init__(self, file):
+	def __init__(self, file: byaml.BYAMLFile):
 		super().__init__()
 		self.setHeaderLabels(["Field", "Value", "Type"])
 
 		endianness = "Big" if file.endianness == ">" else "Little"
 		QTreeWidgetItem(self, ["Endianness", endianness, ""])
 		QTreeWidgetItem(self, ["Version", str(file.version), ""])
-		self.createItem(self, "Root", file.root)
+		self._createItem(self, "Root", file.root)
 
 		self.setRatios([.4, .4, .2])
 	
-	def addArray(self, parent, node):
+	def _addArray(self, parent: ParentItem, node: byaml.BYAMLArray) -> None:
 		for index, value in enumerate(node.value):
-			self.createItem(parent, str(index), value)
+			self._createItem(parent, str(index), value)
 	
-	def addDictionary(self, parent, node):
+	def _addDictionary(self, parent: ParentItem, node: byaml.BYAMLDict) -> None:
 		for key, value in node.value.items():
-			self.createItem(parent, key, value)
+			self._createItem(parent, key, value)
 	
-	def addHashMap(self, parent, node):
+	def _addHashMap(self, parent: ParentItem, node: byaml.BYAMLHashmap) -> None:
 		for key, value in node.value.items():
-			self.createItem(parent, f"{key:08X}", value)
+			self._createItem(parent, f"{key:08X}", value)
 	
-	def createItem(self, parent, key, node):
+	def _createItem(
+		self, parent: ParentItem, key: str, node: byaml.BYAMLNode
+	) -> None:
+		typename = TypeNames[node.type()]
 		if isinstance(node, byaml.BYAMLArray):
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
-			self.addArray(item, node)
+			item = QTreeWidgetItem(parent, [key, "", typename])
+			self._addArray(item, node)
 		elif isinstance(node, byaml.BYAMLDict):
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
-			self.addDictionary(item, node)
+			item = QTreeWidgetItem(parent, [key, "", typename])
+			self._addDictionary(item, node)
 		elif isinstance(node, byaml.BYAMLHashmap):
-			item = QTreeWidgetItem(parent, [key, "", TypeNames[node.type()]])
-			self.addHashMap(item, node)
+			item = QTreeWidgetItem(parent, [key, "", typename])
+			self._addHashMap(item, node)
+		elif isinstance(node, (
+			byaml.BYAMLNone, byaml.BYAMLBool, byaml.BYAMLInt, byaml.BYAMLUint,
+			byaml.BYAMLInt64, byaml.BYAMLUint64, byaml.BYAMLFloat,
+			byaml.BYAMLDouble, byaml.BYAMLString
+		)):
+			item = QTreeWidgetItem(parent, [key, str(node.value), typename])
 		else:
-			item = QTreeWidgetItem(
-				parent, [key, str(node.value), TypeNames[node.type()]]
-			)
+			raise TypeError(f"Unsupported BYAML node type: {typename}")
 
 
 class BYAMLNode(nodes.File):
-	def __init__(self, plugins, reader):
-		super().__init__(reader)
-		self.plugins = plugins
+	_file: byaml.BYAMLFile | None
 
-		self.file = byaml.BYAMLFile()
+	def __init__(self, reader: nodes.Reader):
+		super().__init__(reader)
+		self._file = byaml.BYAMLFile()
 		try:
-			self.file.parse(reader.read())
+			self._file.parse(reader.read())
 		except ParseError:
-			self.file = None
+			self._file = None
 
 		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color=colors.PROPERTIES))
 
-	def createWidgets(self):
-		widgets = {}
-		if self.file:
-			widgets["BYAML"] = BYAMLWidget(self.file)
+	def createWidgets(self) -> dict[str, QWidget]:
+		widgets: dict[str, QWidget] = {}
+		if self._file:
+			widgets["BYAML"] = BYAMLWidget(self._file)
 		return widgets
 
 
 class BYAMLPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:2] == b"BY" or data[:2] == b"YB"
 
-	def create(self, plugins, reader):
-		return BYAMLNode(plugins, reader)
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> BYAMLNode:
+		return BYAMLNode(reader)

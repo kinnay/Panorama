@@ -1,19 +1,22 @@
 
+from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.sead import sarc
 import colors
+import mmap
 import nodes
+import plugins
 import properties
 import qtawesome
 
 
 class SARCWidget(properties.PropertyView):
-	def __init__(self, file):
+	def __init__(self, file: sarc.SARCFile):
 		super().__init__()
 
 		self.setProperties({
 			"Endianness": "Big" if file.endianness == ">" else "Little",
-			"File format version": "%i.%i" %(file.version >> 8, file.version & 0xFF),
+			"File format version": f"{file.version >> 8}.{file.version & 0xFF}",
 			"Hash multiplier": file.hash_multiplier,
 			"Detected alignment": file.alignment,
 			"Number of files": len(file.files) + len(file.unnamed_files)
@@ -21,17 +24,19 @@ class SARCWidget(properties.PropertyView):
 
 
 class SARCUnnamedFilesNode(nodes.Node):
-	def __init__(self, plugins, file):
+	def __init__(self, plugins: plugins.Plugins, file: sarc.SARCFile):
 		super().__init__()
 		self.setText(0, "Unnamed Files")
 
 		for hash in file.unnamed_files:
-			reader = nodes.MemoryReader("%08x" %hash, file.unnamed_files[hash])
+			reader = nodes.MemoryReader(f"{hash:08x}", file.unnamed_files[hash])
 			self.addChild(plugins.create(reader))
 
 
 class SARCFolderNode(nodes.Node):
-	def __init__(self, plugins, file, path):
+	def __init__(
+		self, plugins: plugins.Plugins, file: sarc.SARCFile, path: str
+	):
 		super().__init__()
 		self.setText(0, path.split("/")[-1])
 
@@ -49,29 +54,33 @@ class SARCFolderNode(nodes.Node):
 		
 		for folder in folders:
 			self.addChild(SARCFolderNode(plugins, file, folder))
+		
 		for path in files:
 			reader = nodes.MemoryReader(path.split("/")[-1], file.files[path])
 			self.addChild(plugins.create(reader))
 
 
 class SARCNode(nodes.File):
-	def __init__(self, plugins, reader):
+	_plugins: plugins.Plugins
+	_file: sarc.SARCFile | None
+
+	def __init__(self, plugins: plugins.Plugins, reader: nodes.Reader):
 		super().__init__(reader)
-		self.plugins = plugins
+		self._plugins = plugins
 
 		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.ARCHIVE))
 
 		try:
-			self.file = sarc.SARCFile()
-			self.file.parse(reader.read())
+			self._file = sarc.SARCFile()
+			self._file.parse(reader.read())
 		except ParseError:
-			self.file = None
+			self._file = None
 			return
 
 		files = []
 		folders = []
-		for path in self.file.files:
+		for path in self._file.files:
 			if "/" in path:
 				name = path.split("/")[0]
 				if name not in folders:
@@ -80,23 +89,25 @@ class SARCNode(nodes.File):
 				files.append(path)
 		
 		for folder in folders:
-			self.addChild(SARCFolderNode(self.plugins, self.file, folder))
+			self.addChild(SARCFolderNode(self._plugins, self._file, folder))
 		for file in files:
-			reader = nodes.MemoryReader(file, self.file.files[file])
-			self.addChild(self.plugins.create(reader))
+			reader = nodes.MemoryReader(file, self._file.files[file])
+			self.addChild(self._plugins.create(reader))
 		
-		if self.file.unnamed_files:
-			self.addChild(SARCUnnamedFilesNode(self.plugins, self.file))
+		if self._file.unnamed_files:
+			self.addChild(SARCUnnamedFilesNode(self._plugins, self._file))
 	
-	def createWidgets(self):
-		if self.file:
-			return {"SARC": SARCWidget(self.file)}
+	def createWidgets(self) -> dict[str, QWidget]:
+		if self._file:
+			return {"SARC": SARCWidget(self._file)}
 		return {}
 
 
 class SARCPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:4] == b"SARC"
 
-	def create(self, plugins, reader):
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> SARCNode:
 		return SARCNode(plugins, reader)

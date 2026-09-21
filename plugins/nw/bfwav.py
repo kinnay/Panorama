@@ -7,6 +7,7 @@ from jungle.nw import bfwav
 from ninty import audio
 import colors
 import nodes
+import plugins
 import properties
 import qtawesome
 import signals
@@ -24,246 +25,298 @@ SampleFormat = {
 }
 
 
-def formatTime(time):
+def formatTime(time: int) -> str:
 	hundreds = time % 100
 	seconds = (time // 100) % 60
 	minutes = time // 6000
-	return "%i:%02i.%02i" %(minutes, seconds, hundreds)
+	return f"{minutes}:{seconds:02}.{hundreds:02}"
 
 
-def decodeChannel(file, channel):
+def decodeChannel(file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel) -> bytes:
 	if file.sample_format == bfwav.SampleFormat.PCM_8:
 		return audio.decode_pcm8(channel.data)
 	elif file.sample_format == bfwav.SampleFormat.ADPCM:
-		return audio.decode_adpcm(channel.data, file.num_samples, channel.adpcm_info.coefs)
+		return audio.decode_adpcm(
+			channel.data, file.num_samples, channel.adpcm_info.coefs
+		)
 	return channel.data
 
 
 class AudioBuffer(QIODevice):
-	def __init__(self, data):
+	_data: bytes
+	_loopPos: int | None
+	_loopSize: int | None
+
+	def __init__(self, data: bytes):
 		super().__init__()
-		self.data = data
-		self.loopPos = None
-		self.loopSize = None
+		self._data = data
+		self._loopPos = None
+		self._loopSize = None
 	
-	def setLoopPos(self, pos):
-		self.loopPos = pos
+	def size(self) -> int:
+		return len(self._data)
+	
+	def setLoopPos(self, pos: int) -> None:
+		self._loopPos = pos
 		
-		self.loopSize = None
-		if self.loopPos is not None:
-			self.loopSize = len(self.data) - self.loopPos
+		self._loopSize = None
+		if self._loopPos is not None:
+			self._loopSize = len(self._data) - self._loopPos
 		
-	def readData(self, maxSize):
+	def readData(self, maxSize: int) -> bytes:
 		pos = self.pos()
-		if self.loopPos is None:
-			data = self.data[pos : pos + maxSize]
+		if self._loopPos is None or self._loopSize is None:
+			data = self._data[pos : pos + maxSize]
 		else:
-			if pos >= len(self.data):
-				pos = self.loopPos + (pos - len(self.data)) % self.loopSize
+			if pos >= len(self._data):
+				pos = self._loopPos + (pos - len(self._data)) % self._loopSize
 			
-			data = self.data[pos : pos + maxSize]
+			data = self._data[pos : pos + maxSize]
 			maxSize -= len(data)
 			while maxSize > 0:
-				data += self.data[self.loopPos : self.loopPos + maxSize]
-				maxSize -= self.loopSize
+				data += self._data[self._loopPos : self._loopPos + maxSize]
+				maxSize -= self._loopSize
 		return data
 
 
 class AudioChannel:
-	def __init__(self, format, data):
-		self.stopped = signals.Signal()
+	stopped: signals.Signal
+
+	_buffer: AudioBuffer
+	_sink: QAudioSink
+
+	_initialSample: int
+	"""The sample at which audio play back was started."""
+
+	_sampleRate: int
+	_numSamples: int
+	_loopPos: int | None
+	_loopSize: int | None
+
+	_muted: bool
+	_volume: int
+
+	def __init__(self, format: QAudioFormat, data: bytes):
+		self._stopped = signals.Signal()
 	
-		self.buffer = AudioBuffer(data)
-		self.buffer.open(QIODevice.OpenModeFlag.ReadOnly)
+		self._buffer = AudioBuffer(data)
+		self._buffer.open(QIODevice.OpenModeFlag.ReadOnly)
 		
-		self.sink = QAudioSink(QMediaDevices.defaultAudioOutput(), format)
-		self.sink.stateChanged.connect(self.handleStateChanged)
+		self._sink = QAudioSink(QMediaDevices.defaultAudioOutput(), format)
+		self._sink.stateChanged.connect(self._handleStateChanged)
 		
-		self.initialSample = 0
+		self._initialSample = 0
 		
-		self.sampleRate = 32000
-		self.numSamples = len(data) // 2
+		self._sampleRate = 32000
+		self._numSamples = len(data) // 2
 		
-		self.loopPos = None
-		self.loopSize = None
-		self.muted = False
-		self.volume = 100
+		self._loopPos = None
+		self._loopSize = None
+		self._muted = False
+		self._volume = 100
+	
+	def currentSample(self) -> int:
+		"""Returns the current sample within the audio stream."""
+
+		elapsedSamples = int(
+			self._sink.elapsedUSecs() * self._sampleRate / 1000000
+		)
+
+		totalSamples = self._initialSample + elapsedSamples
+		if totalSamples >= self._numSamples and self._loopPos is not None and \
+		   self._loopSize is not None:
+			totalSamples = self._loopPos + (totalSamples - self._numSamples) \
+				% self._loopSize
+		return totalSamples
+	
+	def setFormat(self, format: QAudioFormat) -> None:
+		self._sampleRate = format.sampleRate()
+		self._numSamples = self._buffer.size() // 2
 		
-	def handleStateChanged(self, state):
+		self._sink.reset()
+		
+		self._sink = QAudioSink(QMediaDevices.defaultAudioOutput(), format)
+		self._sink.stateChanged.connect(self._handleStateChanged)
+			
+	def setLoopPos(self, pos: int) -> None:
+		self._loopPos = pos
+		
+		self._loopSize = None
+		if self._loopPos is not None:
+			self._loopSize = self._numSamples - pos
+			self._buffer.setLoopPos(pos * 2)
+		else:
+			self._buffer.setLoopPos(None)
+		
+	def setMuted(self, muted: bool) -> None:
+		self._muted = muted
+		self._updateVolume()
+		
+	def setVolume(self, volume: int) -> None:
+		self._volume = volume
+		self._updateVolume()
+	
+	def start(self, sample: int) -> None:
+		self._initialSample = sample
+		self._buffer.seek(sample * 2)
+		self._sink.start(self._buffer)
+	
+	def stop(self) -> None:
+		self._sink.reset()
+
+	def _handleStateChanged(self, state: QAudio.State) -> None:
 		if state == QAudio.State.IdleState:
 			self.stopped.emit()
-	
-	def currentSample(self):
-		elapsedSamples = int(self.sink.elapsedUSecs() * self.sampleRate / 1000000)
-		totalSamples = self.initialSample + elapsedSamples
-		if totalSamples >= self.numSamples and self.loopPos is not None:
-			totalSamples = self.loopPos + (totalSamples - self.numSamples) % self.loopSize
-		return totalSamples
 		
-	def updateVolume(self):
-		if self.muted:
-			self.sink.setVolume(0)
+	def _updateVolume(self) -> None:
+		if self._muted:
+			self._sink.setVolume(0)
 		else:
 			base = 20 ** (1 / 100)
-			self.sink.setVolume((base ** self.volume - 1) / 19)
-	
-	def setFormat(self, format):
-		self.sampleRate = format.sampleRate()
-		self.numSamples = len(self.buffer.data) // 2
-		
-		self.sink.reset()
-		
-		self.sink = QAudioSink(QMediaDevices.defaultAudioOutput(), format)
-		self.sink.stateChanged.connect(self.handleStateChanged)
-			
-	def setLoopPos(self, pos):
-		self.loopPos = pos
-		
-		self.loopSize = None
-		if self.loopPos is not None:
-			self.loopSize = self.numSamples - pos
-			self.buffer.setLoopPos(pos * 2)
-		else:
-			self.buffer.setLoopPos(None)
-		
-	def setMuted(self, muted):
-		self.muted = muted
-		self.updateVolume()
-		
-	def setVolume(self, volume):
-		self.volume = volume
-		self.updateVolume()
-	
-	def start(self, sample):
-		self.initialSample = sample
-		self.buffer.seek(sample * 2)
-		self.sink.start(self.buffer)
-	
-	def stop(self):
-		self.sink.reset()
+			self._sink.setVolume((base ** self._volume - 1) / 19)
 
 
 class AudioPlayer:
+	_format: QAudioFormat
+
+	_channels: list[AudioChannel]
+	_playing: bool
+	_loopPos: int | None
+	_pos: int
+
 	def __init__(self):
-		self.format = QAudioFormat()
-		self.format.setChannelCount(1)
-		self.format.setSampleRate(32000)
-		self.format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
+		self._format = QAudioFormat()
+		self._format.setChannelCount(1)
+		self._format.setSampleRate(32000)
+		self._format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
 		
-		self.channels = []
-		self.playing = False
-		self.loopPos = None
-		self.pos = 0
+		self._channels = []
+		self._playing = False
+		self._loopPos = None
+		self._pos = 0
 	
-	def setSampleRate(self, rate):
-		if rate != self.format.sampleRate():
-			self.format.setSampleRate(rate)
-			for channel in self.channels:
-				channel.setFormat(self.format)
+	def setSampleRate(self, rate: int) -> None:
+		if rate != self._format.sampleRate():
+			self._format.setSampleRate(rate)
+			for channel in self._channels:
+				channel.setFormat(self._format)
 	
-	def addChannel(self, data):
-		channel = AudioChannel(self.format, data)
-		channel.setLoopPos(self.loopPos)
+	def addChannel(self, data: bytes) -> None:
+		channel = AudioChannel(self._format, data)
+		channel.setLoopPos(self._loopPos)
 		channel.stopped.connect(self.stop)
-		self.channels.append(channel)
+		self._channels.append(channel)
 	
-	def setLoopPos(self, pos):
-		self.loopPos = pos
-		for channel in self.channels:
+	def setLoopPos(self, pos: int) -> None:
+		self._loopPos = pos
+		for channel in self._channels:
 			channel.setLoopPos(pos)
 	
-	def setVolume(self, volume):
-		for channel in self.channels:
+	def setVolume(self, volume: int) -> None:
+		for channel in self._channels:
 			channel.setVolume(volume)
 	
-	def setChannelMuted(self, index, muted):
-		self.channels[index].setMuted(muted)
+	def setChannelMuted(self, index: int, muted: bool) -> None:
+		self._channels[index].setMuted(muted)
 	
-	def currentSample(self):
-		if self.channels and self.playing:
-			return self.channels[0].currentSample()
-		return self.pos
+	def currentSample(self) -> int:
+		if self._channels and self._playing:
+			return self._channels[0].currentSample()
+		return self._pos
 		
-	def currentTime(self):
-		return self.currentSample() / self.format.sampleRate()
+	def currentTime(self) -> float:
+		return self.currentSample() / self._format.sampleRate()
 		
-	def setCurrentSample(self, sample):
-		self.pos = sample
+	def setCurrentSample(self, sample: int) -> None:
+		self._pos = sample
 	
-	def setCurrentTime(self, time):
-		self.setCurrentSample(int(time * self.format.sampleRate()))
+	def setCurrentTime(self, time: float) -> None:
+		self.setCurrentSample(int(time * self._format.sampleRate()))
 	
-	def play(self):
-		if not self.playing:
-			for channel in self.channels:
-				channel.start(self.pos)
-			self.playing = True
+	def playing(self) -> bool:
+		return self._playing
 	
-	def pause(self):
-		if self.playing:
-			self.pos = self.currentSample()
-			for channel in self.channels:
+	def play(self) -> None:
+		if not self._playing:
+			for channel in self._channels:
+				channel.start(self._pos)
+			self._playing = True
+	
+	def pause(self) -> None:
+		if self._playing:
+			self._pos = self.currentSample()
+			for channel in self._channels:
 				channel.stop()
-			self.playing = False
+			self._playing = False
 			
-	def stop(self):
-		self.pos = 0
-		if self.playing:
-			for channel in self.channels:
+	def stop(self) -> None:
+		self._pos = 0
+		if self._playing:
+			for channel in self._channels:
 				channel.stop()
-			self.playing = False
+			self._playing = False
 
 
 class BFWAVPlayer(QWidget):
-	def __init__(self, file):
+	_player: AudioPlayer
+
+	_sliding: bool
+	_playing: bool
+
+	_slider: QSlider
+	_currentTimeLabel: QLabel
+	_volumeLabel: QLabel
+	_timer: QTimer
+
+	def __init__(self, file: bfwav.BFWAVFile):
 		super().__init__()
 		totalTime = int(file.num_samples / file.sample_rate * 100)
 
-		self.player = AudioPlayer()
-		self.player.setSampleRate(file.sample_rate)
+		self._player = AudioPlayer()
+		self._player.setSampleRate(file.sample_rate)
 		for channel in file.channels:
 			data = decodeChannel(file, channel)
-			self.player.addChannel(data)
+			self._player.addChannel(data)
 
-		self.sliding = False
-		self.playing = False
+		self._sliding = False
+		self._playing = False
 
-		self.slider = QSlider(Qt.Orientation.Horizontal)
-		self.slider.setPageStep(0)
-		self.slider.setRange(0, totalTime)
-		self.slider.valueChanged.connect(self.updateTimeLabel)
-		self.slider.sliderPressed.connect(self.handleSliderPressed)
-		self.slider.sliderReleased.connect(self.handleSliderReleased)
+		self._slider = QSlider(Qt.Orientation.Horizontal)
+		self._slider.setPageStep(0)
+		self._slider.setRange(0, totalTime)
+		self._slider.valueChanged.connect(self._updateTimeLabel)
+		self._slider.sliderPressed.connect(self._handleSliderPressed)
+		self._slider.sliderReleased.connect(self._handleSliderReleased)
 
-		self.currentTimeLabel = QLabel("0:00.00")
-		self.currentTimeLabel.setFixedWidth(60)
-		self.currentTimeLabel.setAlignment(Qt.AlignmentFlag.AlignRight)
+		self._currentTimeLabel = QLabel("0:00.00")
+		self._currentTimeLabel.setFixedWidth(60)
+		self._currentTimeLabel.setAlignment(Qt.AlignmentFlag.AlignRight)
 
 		totalTimeLabel = QLabel()
 		totalTimeLabel.setText(formatTime(totalTime))
 
 		playButton = QPushButton()
 		playButton.setIcon(qtawesome.icon("fa5s.play"))
-		playButton.clicked.connect(self.player.play)
+		playButton.clicked.connect(self._player.play)
 
 		pauseButton = QPushButton()
 		pauseButton.setIcon(qtawesome.icon("fa5s.pause"))
-		pauseButton.clicked.connect(self.player.pause)
+		pauseButton.clicked.connect(self._player.pause)
 
 		stopButton = QPushButton()
 		stopButton.setIcon(qtawesome.icon("fa5s.stop"))
-		stopButton.clicked.connect(self.player.stop)
+		stopButton.clicked.connect(self._player.stop)
 		
 		volumeSlider = QSlider(Qt.Orientation.Horizontal)
 		volumeSlider.setRange(0, 100)
 		volumeSlider.setValue(100)
-		volumeSlider.valueChanged.connect(self.handleVolumeChanged)
+		volumeSlider.valueChanged.connect(self._handleVolumeChanged)
 
-		self.volumeLabel = QLabel("100%")
+		self._volumeLabel = QLabel("100%")
 
 		sliderLayout = QHBoxLayout()
-		sliderLayout.addWidget(self.slider)
-		sliderLayout.addWidget(self.currentTimeLabel)
+		sliderLayout.addWidget(self._slider)
+		sliderLayout.addWidget(self._currentTimeLabel)
 		sliderLayout.addWidget(QLabel("/"))
 		sliderLayout.addWidget(totalTimeLabel)
 
@@ -273,14 +326,16 @@ class BFWAVPlayer(QWidget):
 		buttonLayout.addWidget(stopButton)
 		buttonLayout.addWidget(QLabel("Volume:"))
 		buttonLayout.addWidget(volumeSlider)
-		buttonLayout.addWidget(self.volumeLabel)
+		buttonLayout.addWidget(self._volumeLabel)
 
 		channelLayout = QHBoxLayout()
 		for i in range(len(file.channels)):
 			box = QCheckBox()
 			box.setChecked(True)
 			box.setText("Channel %i" %(i + 1))
-			box.toggled.connect(lambda state, i=i: self.handleChannelState(i, state))
+			box.toggled.connect(
+				lambda state, i=i: self._handleChannelState(i, state)
+			)
 			channelLayout.addWidget(box)
 
 		layout = QVBoxLayout(self)
@@ -288,47 +343,48 @@ class BFWAVPlayer(QWidget):
 		layout.addLayout(buttonLayout)
 		layout.addLayout(channelLayout)
 
-		self.timer = QTimer()
-		self.timer.setInterval(50)
-		self.timer.timeout.connect(self.updateTime)
-		self.timer.start()
+		self._timer = QTimer()
+		self._timer.setInterval(50)
+		self._timer.timeout.connect(self._updateTime)
+		self._timer.start()
 	
-	def handleSliderPressed(self):
-		self.playing = self.player.playing
-		self.player.pause()
-		self.sliding = True
+	def _handleSliderPressed(self) -> None:
+		self._playing = self._player.playing()
+		self._player.pause()
+		self._sliding = True
 	
-	def handleSliderReleased(self):
-		self.sliding = False
-		self.player.setCurrentTime(self.slider.value() / 100)
-		if self.playing:
-			self.player.play()
+	def _handleSliderReleased(self) -> None:
+		self._sliding = False
+		self._player.setCurrentTime(self._slider.value() / 100)
+		if self._playing:
+			self._player.play()
 	
-	def handleVolumeChanged(self, volume):
-		self.volumeLabel.setText("%i%%" %volume)
-		self.player.setVolume(volume)
+	def _handleVolumeChanged(self, volume: int) -> None:
+		self._volumeLabel.setText(f"{volume}%")
+		self._player.setVolume(volume)
 	
-	def handleChannelState(self, index, enabled):
-		self.player.setChannelMuted(index, not enabled)
+	def _handleChannelState(self, index: int, enabled: bool) -> None:
+		self._player.setChannelMuted(index, not enabled)
 
-	def updateTime(self):
-		if not self.sliding:
-			self.slider.setValue(int(self.player.currentTime() * 100))
+	def _updateTime(self) -> None:
+		if not self._sliding:
+			self._slider.setValue(int(self._player.currentTime() * 100))
 
-	def updateTimeLabel(self, value):
-		self.currentTimeLabel.setText(formatTime(value))
-
+	def _updateTimeLabel(self, value: int) -> None:
+		self._currentTimeLabel.setText(formatTime(value))
 
 
 class BFWAVProperties(properties.PropertyView):
-	def __init__(self, file):
+	def __init__(self, file: bfwav.BFWAVFile):
 		super().__init__()
-		self.setProperties(self.makeProperties(file))
+		self.setProperties(self._makeProperties(file))
 	
-	def makeProperties(self, file):
+	def _makeProperties(
+		self, file: bfwav.BFWAVFile
+	) -> properties.PropertyDict:
 		props = {
 			"Endianness": Endianness[file.endianness],
-			"Version": "0x%X" %file.version,
+			"Version": f"0x{file.version:X}",
 			"Sample format": SampleFormat[file.sample_format],
 			"Sample rate": file.sample_rate,
 			"Number of samples": file.num_samples,
@@ -343,24 +399,32 @@ class BFWAVProperties(properties.PropertyView):
 		if file.sample_format == bfwav.SampleFormat.ADPCM:
 			channels = []
 			for i, channel in enumerate(file.channels):
-				channels.append(self.makeChannel(file, channel))
+				channels.append(self._makeChannel(file, channel))
 			props["Channels"] = channels
 		
 		return props
 	
-	def makeChannel(self, file, channel):
+	def _makeChannel(
+		self, file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel
+	) -> properties.PropertyDict:
 		props = {
 			"ADPCM coefficients": channel.adpcm_info.coefs
 		}
 
 		if file.is_looped:
-			props["ADPCM context (main)"] = self.makeAdpcmContext(channel.adpcm_info.main_context)
-			props["ADPCM context (loop)"] = self.makeAdpcmContext(channel.adpcm_info.loop_context)
+			props["ADPCM context (main)"] = \
+				self._makeAdpcmContext(channel.adpcm_info.main_context)
+			props["ADPCM context (loop)"] = \
+				self._makeAdpcmContext(channel.adpcm_info.loop_context)
 		else:
-			props["ADPCM context"] = self.makeAdpcmContext(channel.adpcm_info.main_context)
+			props["ADPCM context"] = \
+				self._makeAdpcmContext(channel.adpcm_info.main_context)
+		
 		return props
 	
-	def makeAdpcmContext(self, context):
+	def _makeAdpcmContext(
+		self, context: bfwav.ADPCMContext
+	) -> properties.PropertyDict:
 		return {
 			"Initial header byte": context.header,
 			"Initial history byte 1": context.hist1,
@@ -369,42 +433,43 @@ class BFWAVProperties(properties.PropertyView):
 
 
 class BFWAVWidget(QWidget):
-	def __init__(self, file):
+	def __init__(self, file: bfwav.BFWAVFile):
 		super().__init__()
-		self.file = file
+		properties = BFWAVProperties(file)
+		player = BFWAVPlayer(file)
 
-		self.properties = BFWAVProperties(file)
-		self.player = BFWAVPlayer(file)
-
-		self.layout = QVBoxLayout(self)
-		self.layout.addWidget(self.properties)
-		self.layout.addWidget(self.player)
+		layout = QVBoxLayout(self)
+		layout.addWidget(properties)
+		layout.addWidget(player)
 
 
 class BFWAVNode(nodes.File):
-	def __init__(self, plugins, reader):
-		super().__init__(reader)
-		self.plugins = plugins
+	_file: bfwav.BFWAVFile | None
 
-		self.file = bfwav.BFWAVFile()
+	def __init__(self, reader: nodes.Reader):
+		super().__init__(reader)
+
+		self._file = bfwav.BFWAVFile()
 		try:
-			self.file.parse(reader.read())
+			self._file.parse(reader.read())
 		except ParseError:
-			self.file = None
+			self._file = None
 
 		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.volume-up", color=colors.AUDIO))
 	
-	def createWidgets(self):
-		widgets = {}
-		if self.file:
-			widgets["BFWAV"] = BFWAVWidget(self.file)
+	def createWidgets(self) -> dict[str, QWidget]:
+		widgets: dict[str, QWidget] = {}
+		if self._file:
+			widgets["BFWAV"] = BFWAVWidget(self._file)
 		return widgets
 
 
 class BFWAVPlugin:
-	def analyze(self, data):
+	def analyze(self, data: bytes) -> bool:
 		return data[:4] == b"FWAV"
 
-	def create(self, plugins, reader):
-		return BFWAVNode(plugins, reader)
+	def create(
+		self, plugins: plugins.Plugins, reader: nodes.Reader
+	) -> BFWAVNode:
+		return BFWAVNode(reader)

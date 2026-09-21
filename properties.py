@@ -4,17 +4,16 @@ from PyQt6.QtWidgets import *
 import widgets
 
 
-type PropertyValue = list[PropertyValue] | dict[str, PropertyValue] | object
+type PropertyDict = dict[str, PropertyValue]
+type PropertyList = list[PropertyValue]
+type PropertyValue = PropertyList | PropertyDict | object
 type ParentItem = QTreeWidget | QTreeWidgetItem
 
 
 class PropertyView(widgets.ScaledTreeWidget):
 	"""This widget provides a simple way to display a tree of properties."""
 	
-	def __init__(
-		self,
-		props: list[PropertyValue] | dict[str, PropertyValue] | None = None
-	):
+	def __init__(self, props: PropertyList | PropertyDict | None = None):
 		super().__init__()
 		self.setHeaderLabels(["Field", "Value"])
 		self.setAlternatingRowColors(True)
@@ -24,22 +23,18 @@ class PropertyView(widgets.ScaledTreeWidget):
 		if props is not None:
 			self.setProperties(props)
 
-	def setProperties(
-		self, props: list[PropertyValue] | dict[str, PropertyValue]
-	) -> None:
+	def setProperties(self, props: PropertyList | PropertyDict) -> None:
 		self.clear()
 		if isinstance(props, list):
 			self._addList(props, self)
 		else:
 			self._addDict(props, self)
 	
-	def _addList(self, props: list[PropertyValue], parent: ParentItem) -> None:
+	def _addList(self, props: PropertyList, parent: ParentItem) -> None:
 		for i, value in enumerate(props):
 			self._addProperty(parent, str(i), value)
 	
-	def _addDict(
-		self, props: dict[str, PropertyValue], parent: ParentItem
-	) -> None:
+	def _addDict(self, props: PropertyDict, parent: ParentItem) -> None:
 		for key, value in props.items():
 			self._addProperty(parent, key, value)
 	
