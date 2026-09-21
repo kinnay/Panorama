@@ -4,13 +4,17 @@ from PyQt6.QtWidgets import *
 
 
 class Action(QAction):
-	def __init__(self, text, shortcut=None):
+	def __init__(self, text: str, shortcut: str | None = None):
 		super().__init__(text)
 		if shortcut:
 			self.setShortcut(shortcut)
 
 
 class FileMenu(QMenu):
+	importFile: Action
+	importfolder: Action
+	reloadWorkspace: Action
+
 	def __init__(self):
 		super().__init__("File")
 		self.importFile = Action("Import File", "Ctrl+O")
@@ -23,6 +27,8 @@ class FileMenu(QMenu):
 
 
 class MenuBar(QMenuBar):
+	file: FileMenu
+
 	def __init__(self):
 		super().__init__()
 		self.file = FileMenu()

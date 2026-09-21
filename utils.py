@@ -5,7 +5,10 @@ def formatSize(size: int) -> str:
 
 	units = ["K", "M", "G", "T"]
 	index = -1
-	while size >= 1024:
+
+	fraction = float(size)
+	while fraction >= 1024:
 		index += 1
-		size /= 1024
-	return f"{size:.1f} {units[index]}B"
+		fraction /= 1024
+	
+	return f"{fraction:.1f} {units[index]}B"

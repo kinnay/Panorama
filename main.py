@@ -1,11 +1,13 @@
 
 """
-Panorama is a program that is designed to view various file formats
-that are seen in Nintendo games.
+Panorama is a program that is designed to view various file formats that are
+seen in Nintendo games.
 """
 
 from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+
 import psutil
 import string
 import sys
@@ -21,48 +23,68 @@ import workspace
 
 class StatusBar(QStatusBar):
 	"""A simple status bar that displays the memory usage of the program."""
+
+	_text: QLabel
+	_timer: QTimer
 	
 	def __init__(self):
 		super().__init__()
-		self.text = QLabel()
-		self.addPermanentWidget(self.text)
+		self._text = QLabel()
+		self.addPermanentWidget(self._text)
 
-		self.timer = QTimer()
-		self.timer.setInterval(500)
-		self.timer.timeout.connect(self.updateStatus)
-		self.timer.start()
-		self.updateStatus()
+		self._timer = QTimer()
+		self._timer.setInterval(500)
+		self._timer.timeout.connect(self._updateStatus)
+		self._timer.start()
+		self._updateStatus()
 	
-	def updateStatus(self):
+	def _updateStatus(self) -> None:
 		process = psutil.Process()
-		memory = "Memory usage: %s" %utils.formatSize(process.memory_info().rss)
-		self.text.setText(memory)
+		usage = utils.formatSize(process.memory_info().rss)
+		text = f"Memory usage: {usage}"
+		self._text.setText(text)
 
 
 class MainWindow(QMainWindow):
 	"""The main window of the program."""
 
-	def __init__(self, settings):
+	_settings: QSettings
+
+	_plugins: plugins.Plugins
+	_unsaved: bool
+
+	_menu: menu.MenuBar
+	_statusBar: StatusBar
+
+	_workspaceView: workspace.WorkspaceView
+	_workspacePaths: list[str]
+	_workspaceDock: QDockWidget
+
+	def __init__(self, settings: QSettings):
 		super().__init__()
-		self.settings = settings
+		self._settings = settings
 
 		# Initialize general variables
-		self.plugins = plugins.Plugins()
-		self.unsaved = False
+		self._plugins = plugins.Plugins()
+		self._unsaved = False
 
 		# Initialize various components
-		self.initializeGeometry()
-		self.initializeMenuBar()
-		self.initializeStatusBar()
-		self.initializeWorkspace()
+		self._initializeGeometry()
+		self._initializeMenuBar()
+		self._initializeStatusBar()
+		self._initializeWorkspace()
 		
 		self.setCentralWidget(QWidget())
 		self.setWindowTitle("Panorama")
 
-	def initializeGeometry(self):
+	def closeEvent(self, e: QCloseEvent) -> None:
+		self._settings.setValue("window.geometry", self.saveGeometry())
+		self._settings.setValue("window.state", self.saveState())
+
+	def _initializeGeometry(self) -> None:
 		"""Restores the window to its previous geometry."""
 
-		geometry = self.settings.value("window.geometry")
+		geometry = self._settings.value("window.geometry")
 		if geometry:
 			self.restoreGeometry(geometry)
 		else:
@@ -72,68 +94,73 @@ class MainWindow(QMainWindow):
 				screen.width() // 2, screen.height() // 2
 			)
 
-	def initializeMenuBar(self):
-		self.menu = menu.MenuBar()
-		self.menu.file.importFile.triggered.connect(self.handleImportFile)
-		self.menu.file.importFolder.triggered.connect(self.handleImportFolder)
-		self.menu.file.reloadWorkspace.triggered.connect(self.handleReloadWorkspace)
-		self.setMenuBar(self.menu)
+	def _initializeMenuBar(self) -> None:
+		self._menu = menu.MenuBar()
+		self._menu.file.importFile.triggered.connect(self._handleImportFile)
+		self._menu.file.importFolder.triggered.connect(self._handleImportFolder)
+		self._menu.file.reloadWorkspace.triggered.connect(
+			self._handleReloadWorkspace
+		)
+		self.setMenuBar(self._menu)
 
-	def initializeStatusBar(self):
-		self.statusBar = StatusBar()
-		self.setStatusBar(self.statusBar)
+	def _initializeStatusBar(self) -> None:
+		self._statusBar = StatusBar()
+		self.setStatusBar(self._statusBar)
 
-	def initializeWorkspace(self):
-		self.workspaceView = workspace.WorkspaceView(self.plugins, self.settings)
-		self.workspaceView.itemActivated.connect(self.handleItemActivated)
-		self.workspaceView.itemRemoved.connect(self.handleItemRemoved)
+	def _initializeWorkspace(self) -> None:
+		self._workspaceView = workspace.WorkspaceView(
+			self._plugins, self._settings
+		)
+		self._workspaceView.itemActivated.connect(self._handleItemActivated)
+		self._workspaceView.itemRemoved.connect(self._handleItemRemoved)
 
-		self.workspacePaths = self.settings.value("workspace.paths", [])
-		for path in self.workspacePaths:
-			self.workspaceView.addPath(path)
+		self._workspacePaths = self._settings.value("workspace.paths", [])
+		for path in self._workspacePaths:
+			self._workspaceView.addPath(path)
 
-		self.workspaceDock = QDockWidget("Workspace")
-		self.workspaceDock.setObjectName("workspace")
-		self.workspaceDock.setWidget(self.workspaceView)
-		self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.workspaceDock)
+		self._workspaceDock = QDockWidget("Workspace")
+		self._workspaceDock.setObjectName("workspace")
+		self._workspaceDock.setWidget(self._workspaceView)
+		self.addDockWidget(
+			Qt.DockWidgetArea.LeftDockWidgetArea, self._workspaceDock
+		)
 
-		self.restoreState(self.settings.value("window.state", b""))
-
-	def closeEvent(self, e):
-		self.settings.setValue("window.geometry", self.saveGeometry())
-		self.settings.setValue("window.state", self.saveState())
+		self.restoreState(self._settings.value("window.state", b""))
 		
-	def handleImportFile(self):
+	def _handleImportFile(self) -> None:
 		path, filter = QFileDialog.getOpenFileName(
-			self, "Import file", self.settings.value("filesystem.import_path"),
+			self, "Import file", self._settings.value("filesystem.import_path"),
 			"All files (*.*)"
 		)
-		if path and path not in self.workspacePaths:
-			self.workspacePaths.append(path)
-			self.settings.setValue("workspace.paths", self.workspacePaths)
-			self.settings.setValue("filesystem.import_path", path)
-			self.workspaceView.addPath(path)
+		if path and path not in self._workspacePaths:
+			self._workspacePaths.append(path)
+			self._settings.setValue("workspace.paths", self._workspacePaths)
+			self._settings.setValue("filesystem.import_path", path)
+			self._workspaceView.addPath(path)
 
-	def handleImportFolder(self):
+	def _handleImportFolder(self) -> None:
 		dir = QFileDialog.getExistingDirectory(
-			self, "Import Folder", self.settings.value("filesystem.import_path")
+			self, "Import Folder", self._settings.value("filesystem.import_path")
 		)
-		if dir and dir not in self.workspacePaths:
-			self.workspacePaths.append(dir)
-			self.settings.setValue("workspace.paths", self.workspacePaths)
-			self.settings.setValue("filesystem.import_path", dir)
-			self.workspaceView.addPath(dir)
+		if dir and dir not in self._workspacePaths:
+			self._workspacePaths.append(dir)
+			self._settings.setValue("workspace.paths", self._workspacePaths)
+			self._settings.setValue("filesystem.import_path", dir)
+			self._workspaceView.addPath(dir)
 	
-	def handleReloadWorkspace(self):
-		self.workspaceView.clear()
-		for path in self.workspacePaths:
-			self.workspaceView.addPath(path)
+	def _handleReloadWorkspace(self) -> None:
+		self._workspaceView.clear()
+		for path in self._workspacePaths:
+			self._workspaceView.addPath(path)
 
-	def handleItemActivated(self, item):
+	def _handleItemActivated(self, item: nodes.Node) -> None:
 		widgets = item.createWidgets()
+
+		# Always create a hex editor and text editor if applicable
 		if isinstance(item, nodes.File):
 			data = item.read()
-			if isinstance(data, bytes) and all(chr(c) in string.printable for c in data):
+			if isinstance(data, bytes) and \
+			   all(chr(c) in string.printable for c in data):
 				widgets["Text"] = text.TextWidget(data.decode())
 			widgets["Hex"] = binary.BinaryWidget(data)
 		
@@ -143,9 +170,9 @@ class MainWindow(QMainWindow):
 				tabs.addTab(widget, name)
 			self.setCentralWidget(tabs)
 	
-	def handleItemRemoved(self, path):
-		self.workspacePaths.remove(path)
-		self.settings.setValue("workspace.paths", self.workspacePaths)
+	def _handleItemRemoved(self, path: str) -> None:
+		self._workspacePaths.remove(path)
+		self._settings.setValue("workspace.paths", self._workspacePaths)
 
 
 if __name__ == "__main__":

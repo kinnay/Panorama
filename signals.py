@@ -1,11 +1,16 @@
 
-class Signal:
-	def __init__(self):
-		self.listeners = []
-	
-	def connect(self, listener):
-		self.listeners.append(listener)
+from typing import Callable
 
-	def emit(self, *args, **kwargs):
-		for listener in self.listeners:
-			listener(*args, **kwargs)
+
+class Signal[*T = *tuple[()]]:
+	_listeners: list[Callable[[*T], None]]
+
+	def __init__(self):
+		self._listeners = []
+	
+	def connect(self, listener: Callable[[*T], None]) -> None:
+		self._listeners.append(listener)
+
+	def emit(self, *args: *T) -> None:
+		for listener in self._listeners:
+			listener(*args)

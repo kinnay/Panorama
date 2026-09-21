@@ -2,6 +2,10 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+
+from plugins import Plugins
+from typing import Callable
+
 import filesystem
 import nodes
 import os
@@ -10,15 +14,27 @@ import signals
 
 
 class InvalidItem(nodes.Node):
-	def __init__(self, path):
+	"""
+	This item represents a file or folder in the workspace that no longer
+	exists. This happens if the file or folder was deleted, moved, or its
+	storage device is no longer available.
+	"""
+
+	_path: str
+
+	def __init__(self, path: str):
 		super().__init__()
-		self.path = path
+		self._path = path
+
 		self.setText(0, os.path.basename(path))
 		self.setIcon(0, qtawesome.icon("fa5s.ban", color="red"))
 
+	def path(self) -> str:
+		return self._path
+
 
 class Action(QAction):
-	def __init__(self, text, callback):
+	def __init__(self, text: str, callback: Callable[[], None]):
 		super().__init__(text)
 		self.triggered.connect(callback)
 
@@ -26,20 +42,25 @@ class Action(QAction):
 class WorkspaceView(QTreeWidget):
 	"""The workspace tree."""
 
-	def __init__(self, plugins, settings):
+	itemRemoved: signals.Signal[str]
+
+	_plugins: Plugins
+	_settings: QSettings
+
+	def __init__(self, plugins: Plugins, settings: QSettings):
 		super().__init__()
-		self.plugins = plugins
-		self.settings = settings
+		self._plugins = plugins
+		self._settings = settings
 
 		self.setHeaderHidden(True)
 		self.setSortingEnabled(True)
 		self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
-		self.itemExpanded.connect(self.handleItemExpanded)
+		self.itemExpanded.connect(self._handleItemExpanded)
 
 		self.itemRemoved = signals.Signal()
 
-	def contextMenuEvent(self, e):
+	def contextMenuEvent(self, e: QContextMenuEvent) -> None:
 		menu = QMenu(self)
 
 		item = self.itemAt(e.pos())
@@ -55,40 +76,47 @@ class WorkspaceView(QTreeWidget):
 		if not menu.isEmpty():
 			menu.exec(e.globalPos())
 
-	def addPath(self, path):
+	def addPath(self, path: str) -> None:
 		if os.path.isdir(path):
-			self.addTopLevelItem(filesystem.Folder(self.plugins, path))
+			self.addTopLevelItem(filesystem.Folder(self._plugins, path))
 		elif os.path.isfile(path):
 			reader = filesystem.FileReader(path)
-			self.addTopLevelItem(self.plugins.create(reader))
+			self.addTopLevelItem(self._plugins.create(reader))
 		elif os.path.exists(path):
 			self.addTopLevelItem(filesystem.Other(path))
 		else:
 			self.addTopLevelItem(InvalidItem(path))
 
-	def handleItemExpanded(self, item):
-		# In case the item creates its children lazily,
-		# create them now.
+	def _handleItemExpanded(self, item: nodes.Node) -> None:
+		# In case the item creates its children lazily, create them now.
 		item.expand()
 	
-	def handleRemove(self, item):
+	def handleRemove(self, item: QTreeWidgetItem) -> None:
 		index = self.indexOfTopLevelItem(item)
 		self.takeTopLevelItem(index)
 
 		if isinstance(item, filesystem.Folder):
-			self.itemRemoved.emit(item.path)
+			self.itemRemoved.emit(item.path())
 		elif isinstance(item, nodes.File):
-			self.itemRemoved.emit(item.reader.path)
+			reader = item.reader()
+			if isinstance(reader, filesystem.FileReader):
+				self.itemRemoved.emit(reader.path())
+		elif isinstance(item, filesystem.Other):
+			self.itemRemoved.emit(item.path())
 		elif isinstance(item, InvalidItem):
-			self.itemRemoved.emit(item.path)
+			self.itemRemoved.emit(item.path())
 
-	def handleExtract(self, item):
-		default = os.path.join(self.settings.value("filesystem.extract_path", ""), item.text(0))
+	def handleExtract(self, item: nodes.File) -> None:
+		default = os.path.join(
+			self._settings.value("filesystem.extract_path", ""), item.text(0)
+		)
 		
 		path, filter = QFileDialog.getSaveFileName(
 			self, "Extract file", default, "All files (*.*)"
 		)
 		if path:
-			self.settings.setValue("filesystem.extract_path", os.path.dirname(path))
+			self._settings.setValue(
+				"filesystem.extract_path", os.path.dirname(path)
+			)
 			with open(path, "wb") as f:
 				f.write(item.read())
