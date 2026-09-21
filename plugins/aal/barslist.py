@@ -31,7 +31,7 @@ class BARSLISTNode(nodes.File):
 		except ParseError:
 			self.file = None
 
-		self.setText(0, reader.text())
+		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.file", color=colors.AUDIO))
 
 	def createWidgets(self):

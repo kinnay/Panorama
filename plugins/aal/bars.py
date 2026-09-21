@@ -44,7 +44,7 @@ class BARSNode(nodes.File):
 		super().__init__(reader)
 		self.plugins = plugins
 
-		self.setText(0, reader.text())
+		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.AUDIO))
 
 		self.file = bars.BARSFile()

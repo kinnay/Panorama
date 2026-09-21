@@ -21,7 +21,7 @@ class ZstdNode(nodes.File):
 		super().__init__(reader)
 		self.plugins = plugins
 
-		self.setText(0, self.reader.text())
+		self.setText(0, self.reader.filename())
 		self.setIcon(0, qtawesome.icon("fa5s.box", color=colors.COMPRESSION))
 
 		self.error = False

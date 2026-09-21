@@ -48,7 +48,7 @@ class PMAANode(nodes.File):
 		except ParseError:
 			self.file = None
 
-		self.setText(0, reader.text())
+		self.setText(0, reader.filename())
 		self.setIcon(0, qtawesome.icon("ri.landscape-fill", color=colors.PROPERTIES))
 
 	def createWidgets(self):
