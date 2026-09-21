@@ -107,7 +107,7 @@ class AudioChannel:
 		
 		self._initialSample = 0
 		
-		self._sampleRate = 32000
+		self._sampleRate = 48000
 		self._numSamples = len(data) // 2
 		
 		self._loopPos = None
