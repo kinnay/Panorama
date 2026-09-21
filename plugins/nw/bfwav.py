@@ -97,7 +97,7 @@ class AudioChannel:
 	_volume: int
 
 	def __init__(self, format: QAudioFormat, data: bytes):
-		self._stopped = signals.Signal()
+		self.stopped = signals.Signal()
 	
 		self._buffer = AudioBuffer(data)
 		self._buffer.open(QIODevice.OpenModeFlag.ReadOnly)
@@ -187,7 +187,7 @@ class AudioPlayer:
 	def __init__(self):
 		self._format = QAudioFormat()
 		self._format.setChannelCount(1)
-		self._format.setSampleRate(32000)
+		self._format.setSampleRate(48000)
 		self._format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
 		
 		self._channels = []
