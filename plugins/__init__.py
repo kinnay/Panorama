@@ -2,7 +2,7 @@
 from plugins.aal import bameta, bars, barslist
 from plugins.agl import pmaa
 from plugins.common import byaml
-from plugins.lms import msbp
+from plugins.lms import msbp, msbt
 from plugins.nw import bfwav
 from plugins.sead import sarc, yaz0
 from plugins import zstd
@@ -51,6 +51,7 @@ class Plugins:
 			bfwav.BFWAVPlugin(),
 			byaml.BYAMLPlugin(),
 			msbp.MSBPPlugin(),
+			msbt.MSBTPlugin(),
 			pmaa.PMAAPlugin(),
 			sarc.SARCPlugin(),
 			yaz0.Yaz0Plugin(),

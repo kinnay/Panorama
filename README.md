@@ -13,6 +13,7 @@ The following file formats currently have a plugin implemented for them:
 | AAL | [BARSLIST](https://nintendo-formats.com/libs/aal/barslist.html) | `.barslist` | Audio resource lists |
 | AGL | [PMAA](https://nintendo-formats.com/libs/agl/pmaa.html) | `.bagl*` | Graphics parameters |
 | LMS | [MSBP](https://nintendo-formats.com/libs/lms/msbp.html) | `.msbp` | Message project files |
+| LMS | [MSBT](https://nintendo-formats.com/libs/lms/msbt.html) | `.msbt` | Message files |
 | NW4F | [BFWAV](https://nintendo-formats.com/libs/nw/bfwav.html) | `.bfwav` | Wave files |
 | SEAD | [SARC](https://nintendo-formats.com/libs/sead/sarc.html) | `.sarc` | Archives |
 | SEAD | [SZS](https://nintendo-formats.com/libs/sead/yaz0.html) | `.szs` | Yaz0 compression |
