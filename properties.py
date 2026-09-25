@@ -1,10 +1,11 @@
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from typing import Any
 import widgets
 
 
-type PropertyDict = dict[str, PropertyValue]
+type PropertyDict = dict[Any, PropertyValue]
 type PropertyList = list[PropertyValue]
 type PropertyValue = PropertyList | PropertyDict | object
 type ParentItem = QTreeWidget | QTreeWidgetItem
@@ -39,13 +40,13 @@ class PropertyView(widgets.ScaledTreeWidget):
 			self._addProperty(parent, key, value)
 	
 	def _addProperty(
-		self, parent: ParentItem, key: str, value: PropertyValue
+		self, parent: ParentItem, key: Any, value: PropertyValue
 	) -> None:
 		if isinstance(value, list):
-			item = QTreeWidgetItem(parent, [key, f"# {len(value)}"])
+			item = QTreeWidgetItem(parent, [str(key), f"{len(value)} items"])
 			self._addList(value, item)
 		elif isinstance(value, dict):
-			item = QTreeWidgetItem(parent, [key])
+			item = QTreeWidgetItem(parent, [str(key), f"{len(value)} items"])
 			self._addDict(value, item)
 		else:
-			QTreeWidgetItem(parent, [key, str(value)])
+			QTreeWidgetItem(parent, [str(key), str(value)])
