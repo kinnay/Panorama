@@ -33,19 +33,15 @@ class TextStream:
 		if color != self._color:
 			if self._color or self._bgcolor:
 				self._text += "</span>"
-			if color or self._bgcolor:
-				self._text += f"<span style='color: {color}; " \
-					f"background-color: {self._bgcolor}'>"
 			self._color = color
+			self._applyStyle()
 	
 	def setBackground(self, color: str | None) -> None:
 		if color != self._bgcolor:
 			if self._color or self._bgcolor:
 				self._text += "</span>"
-			if color or self._color:
-				self._text += f"<span style='color: {self._color}; " \
-					f"background-color: {color}'>"
 			self._bgcolor = color
+			self._applyStyle()
 	
 	def write(self, text: str) -> None:
 		self._text += text.replace("\n", "<br>").replace(" ", "&nbsp;")
@@ -56,6 +52,35 @@ class TextStream:
 			self._color = None
 			self._bgcolor = None
 		return self._text
+
+	def _applyStyle(self) -> None:
+		style = []
+		if self._color:
+			style.append(f"color: {self._color}")
+		if self._bgcolor:
+			style.append(f"background-color: {self._bgcolor}")
+		
+		if style:
+			self._text += f"<span style='{"; ".join(style)}'>"
+
+
+class BinaryContextMenu(QMenu):
+	copy: QAction
+	selectAll: QAction
+
+	def __init__(self, parent: QWidget | None = None):
+		super().__init__(parent)
+		self.copy = QAction("Copy")
+		self.copy.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditCopy))
+		self.copy.setShortcut(QKeySequence.StandardKey.Copy)
+
+		self.selectAll = QAction("Select All")
+		self.selectAll.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
+		self.selectAll.setShortcut(QKeySequence.StandardKey.SelectAll)
+
+		self.addAction(self.copy)
+		self.addSeparator()
+		self.addAction(self.selectAll)
 
 
 class BinaryView(QTextEdit):
@@ -166,10 +191,13 @@ class BinaryView(QTextEdit):
 		self.wheel.emit(e)
 
 	def contextMenuEvent(self, e: QContextMenuEvent) -> None:
-		"""
-		Disables the context menu. We might implement a custom context menu
-		later.
-		"""
+		menu = BinaryContextMenu(self)
+		menu.copy.setEnabled(self._selectionEnd > self._selectionStart)
+
+		menu.copy.triggered.connect(self._handleCopy)
+		menu.selectAll.triggered.connect(self._handleSelectAll)
+
+		menu.exec(e.globalPos())
 
 	def keyPressEvent(self, e: QKeyEvent) -> None:
 		self._handleKeyPress(e)
@@ -232,6 +260,16 @@ class BinaryView(QTextEdit):
 			self.scrollRequest.emit((self._mousePos - self.height()) // 10)
 
 	def _handleKeyPress(self, e: QKeyEvent) -> None:
+		self._checkKeySequence(e)
+		self._checkNavigationKeys(e)
+	
+	def _checkKeySequence(self, e: QKeyEvent) -> bool:
+		if e.matches(QKeySequence.StandardKey.Copy):
+			self._handleCopy()
+		elif e.matches(QKeySequence.StandardKey.SelectAll):
+			self._handleSelectAll()
+	
+	def _checkNavigationKeys(self, e: QKeyEvent) -> None:
 		key = e.key()
 
 		if key == Qt.Key.Key_Left:
@@ -269,9 +307,7 @@ class BinaryView(QTextEdit):
 			
 		elif key == Qt.Key.Key_End:
 			self._cursorAddr = ((self._cursorAddr + 16) & ~15)
-			if self._cursorAddr > len(self._data):
-				self._cursorAddr = len(self._data)
-			
+
 			self._cursorOffset = 0
 			if self._cursorAddr % 16 == 0 and self._cursorAddr != 0:
 				self._cursorAddr -= 1
@@ -279,16 +315,50 @@ class BinaryView(QTextEdit):
 		
 		if key in [
 			Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down,
-			Qt.Key.Key_PageUp, Qt.Key.Key_PageDown, Qt.Key.Key_Home, Qt.Key.Key_End
+			Qt.Key.Key_PageUp, Qt.Key.Key_PageDown, Qt.Key.Key_Home,
+			Qt.Key.Key_End
 		]:
 			modifiers = e.modifiers()
 			shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
 
+			self._clampCursor()
+
 			if shift:
-				self._moveSelectionTo(self._cursorAddr)
+				selectionPos = self._selectionAddr(
+					self._cursorAddr, self._cursorOffset, self._cursorAscii
+				)
+				self._moveSelectionTo(selectionPos)
 			else:
 				self._clearSelection()
 		
+			self._jumpToCursor()
+	
+	def _handleCopy(self) -> None:
+		data = self._data[self._selectionStart : self._selectionEnd]
+		if not data:
+			return
+
+		if self._selectionAscii:
+			text = data.decode("charmap")
+		else:
+			text = data.hex()
+
+		clipboard = QGuiApplication.clipboard()
+		clipboard.setText(text)
+	
+	def _handleSelectAll(self) -> None:
+		self._cursorAddr = len(self._data)
+		self._cursorOffset = 0
+
+		self._selectionStart = 0
+		self._selectionAnchor = 0
+		self._selectionEnd = len(self._data)
+
+		self._clampCursor()
+		self._updateText()
+		self._jumpToCursor()
+	
+	def _jumpToCursor(self) -> None:
 		if self._cursorAddr < self._base:
 			self.jump.emit(self._cursorAddr & ~0xF)
 		elif self._cursorAddr >= self._end:
@@ -316,7 +386,7 @@ class BinaryView(QTextEdit):
 			self._selectionEnd = addr
 
 	def _selectionAddr(self, pos, offset, view):
-		if pos % 16 == 15:
+		if pos % 16 == 15 or pos == len(self._data) - 1:
 			if view and offset:
 				return pos + 1
 			return pos + (offset == 2)
@@ -328,7 +398,7 @@ class BinaryView(QTextEdit):
 		
 		if self._cursorAddr == len(self._data):
 			self._cursorOffset = 0
-			if self._cursorAddr % 16 == 0 and self._cursorAddr != 0:
+			if self._cursorAddr != 0:
 				self._cursorAddr -= 1
 				if self._cursorAscii:
 					self._cursorOffset = 1
@@ -379,7 +449,9 @@ class BinaryView(QTextEdit):
 
 	def _updateCursor(self) -> None:
 		if self._cursorAddr >= self._base and self._cursorAddr < self._end:
-			pos = self._getCursorPos(self._cursorAddr, self._cursorOffset, self._cursorAscii)
+			pos = self._getCursorPos(
+				self._cursorAddr, self._cursorOffset, self._cursorAscii
+			)
 			
 			cursor = QTextCursor(self.document())
 			cursor.setPosition(pos)
@@ -388,18 +460,18 @@ class BinaryView(QTextEdit):
 			self.setTextCursor(QTextCursor())
 
 	def _updateColor(self, stream: TextStream, addr: int, ascii: bool) -> None:
-		if not ascii and addr % 2:
-			stream.setColor("gray")
-		else:
-			stream.setColor(None)
-		
 		if self._selectionStart <= addr < self._selectionEnd:
 			if ascii == self._selectionAscii:
 				stream.setBackground("blue")
 			else:
 				stream.setBackground("lightblue")
 			stream.setColor("white")
+		
 		else:
+			if not ascii and addr % 2:
+				stream.setColor("gray")
+			else:
+				stream.setColor(None)
 			stream.setBackground(None)
 
 	def _updateText(self) -> None:
@@ -498,6 +570,7 @@ class BinaryWidget(QWidget):
 		scroll = max((len(self._data) + 15) // 16 - rows, 0)
 		self._scrollBar.setVisible(scroll != 0)
 		self._scrollBar.setRange(0, scroll)
+		self._scrollBar.setValue(address // 16)
 
 	def _updateView(self) -> None:
 		offset = self._scrollBar.value() * 16
