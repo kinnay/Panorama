@@ -461,7 +461,8 @@ class BinaryWidget(QWidget):
 		self._scrollBar.setRange(0, len(data) // 16)
 		self._scrollBar.valueChanged.connect(self._updateView)
 
-		self._font = QFont("Monospace")
+		self._font = \
+			QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
 		self._font.setPixelSize(14)
 		self.setFont(self._font)
 

@@ -9,7 +9,7 @@ class ScaledTreeWidget(QTreeWidget):
 	def __init__(self):
 		super().__init__()
 
-		font = QFont("Monospace")
+		font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
 		font.setPixelSize(14)
 		self.setFont(font)
 	

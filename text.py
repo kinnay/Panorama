@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import *
 class TextWidget(QTextEdit):
 	def __init__(self, text: str):
 		super().__init__()
-		font = QFont("Monospace")
+		font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
 		font.setPixelSize(14)
 		self.setFont(font)
 
