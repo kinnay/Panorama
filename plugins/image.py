@@ -22,12 +22,6 @@ class ImageWidget(QWidget):
         layout.addWidget(label)
 
 
-#class ImageWidget(QLabel):
-#    def __init__(self, image: QImage):
-#        super().__init__()
-#        self.setPixmap(QPixmap.fromImage(image))
-
-
 class ImageNode(nodes.File):
     _image: QImage | None
     
