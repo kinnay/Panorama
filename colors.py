@@ -2,5 +2,6 @@
 AUDIO = "#c00"
 ARCHIVE = "#a50"
 COMPRESSION = "#888"
+GRAPHICS = "#f88"
 PROPERTIES = "#c00"
 TEXT = "#00c"
