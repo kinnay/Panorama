@@ -5,7 +5,7 @@ from plugins.common import byaml
 from plugins.lms import msbp, msbt
 from plugins.nw import bfwav
 from plugins.sead import sarc, yaz0
-from plugins import zstd
+from plugins import image, zstd
 
 import nodes
 import qtawesome
@@ -50,6 +50,7 @@ class Plugins:
 			barslist.BARSLISTPlugin(),
 			bfwav.BFWAVPlugin(),
 			byaml.BYAMLPlugin(),
+			image.ImagePlugin(),
 			msbp.MSBPPlugin(),
 			msbt.MSBTPlugin(),
 			pmaa.PMAAPlugin(),
