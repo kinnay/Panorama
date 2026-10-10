@@ -3,14 +3,11 @@
 Provides nodes for files and folders that are stored on disk.
 """
 
-
 from PyQt6.QtWidgets import *
-
+from panorama import nodes, plugins
 import io
 import mmap
-import nodes
 import os
-import plugins
 import qtawesome
 
 

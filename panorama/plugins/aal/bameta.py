@@ -1,11 +1,11 @@
 
 from PyQt6.QtWidgets import *
+
 from jungle.errors import ParseError
 from jungle.aal import bameta
-import colors
-import nodes
-import plugins
-import properties
+
+from panorama import colors, nodes, plugins, properties
+
 import qtawesome
 
 

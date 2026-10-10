@@ -1,8 +1,8 @@
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from panorama import widgets
 from typing import Any
-import widgets
 
 
 type PropertyDict = dict[Any, PropertyValue]

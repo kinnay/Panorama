@@ -4,11 +4,8 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
+from panorama import colors, nodes, plugins, properties
 
-import colors
-import nodes
-import plugins
-import properties
 import qtawesome
 
 

@@ -2,15 +2,13 @@
 from PyQt6.QtCore import *
 from PyQt6.QtMultimedia import *
 from PyQt6.QtWidgets import *
+
 from jungle.errors import ParseError
 from jungle.nw import bfwav
 from ninty import audio
-import colors
-import nodes
-import plugins
-import properties
+from panorama import colors, nodes, plugins, properties, signals
+
 import qtawesome
-import signals
 
 
 Endianness = {

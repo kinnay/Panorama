@@ -1,7 +1,7 @@
 This project implements a viewer for various file formats that are seen in Nintendo games.
 
 ## Features
-After launching the tool, you can import files or folder into the workspace. This allows you to browse through files in a tree, including files that are stored in archives. After selecting a file in the tree, the contents of the file are displayed on the screen. In addition to file-specific widgets, a hex editor is shown that displays the raw contents of the file, even for files that would otherwise not be supported. In addition, all files can be extracted from archives.
+After launching the tool, you can import files or folder into the workspace. This allows you to browse through files in a tree, including files that are stored in archives. After selecting a file in the tree, the contents of the file are displayed on the screen. In addition to file-specific widgets, a hex viewer is shown that displays the raw contents of the file, even for files that would otherwise not be supported. In addition, all files can be extracted from archives.
 
 The following file formats currently have a plugin implemented for them:
 

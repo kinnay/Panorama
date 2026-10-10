@@ -1,12 +1,12 @@
 
 from PyQt6.QtWidgets import *
+
 from jungle.errors import ParseError
 from jungle.lms import msbt
-from properties import PropertyView, PropertyDict
-import colors
-import nodes
-import plugins
-import properties
+
+from panorama import colors, nodes, plugins
+from panorama.properties import PropertyView, PropertyDict
+
 import qtawesome
 
 

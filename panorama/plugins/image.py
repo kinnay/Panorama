@@ -3,9 +3,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-import colors
-import nodes
-import plugins
+from panorama import colors, nodes, plugins
+
 import qtawesome
 
 

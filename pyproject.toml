@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools >= 77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "panorama-tools"
+version = "0.0.2"
+dependencies = [
+    "PyQt6",
+    "QtAwesome",
+    "ninty",
+    "psutil",
+    "zstd",
+    "jungle-package == 0.0.2"
+]
+requires-python = ">= 3.14"
+authors = [
+    {name = "Yannik Marchand", email = "ymarchand@me.com"}
+]
+description = "A viewer for file formats found in Nintendo games"
+readme = "README.md"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+
+[project.urls]
+Repository = "https://github.com/kinnay/Panorama.git"
+Issues = "https://github.com/kinnay/Panorama/issues"
+
+[project.gui-scripts]
+panorama = "panorama.main:main"
+
+[tool.setuptools.packages.find]
+namespaces = true
+include = ["panorama", "panorama.*"]

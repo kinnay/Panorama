@@ -1,13 +1,13 @@
 
-from plugins.aal import bameta, bars, barslist
-from plugins.agl import pmaa
-from plugins.common import byaml
-from plugins.lms import msbp, msbt
-from plugins.nw import bfwav
-from plugins.sead import sarc, yaz0
-from plugins import image, zstd
+from panorama.plugins.aal import bameta, bars, barslist
+from panorama.plugins.agl import pmaa
+from panorama.plugins.common import byaml
+from panorama.plugins.lms import msbp, msbt
+from panorama.plugins.nw import bfwav
+from panorama.plugins.sead import sarc, yaz0
+from panorama.plugins import image, zstd
+from panorama import nodes
 
-import nodes
 import qtawesome
 import typing
 

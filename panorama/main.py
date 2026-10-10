@@ -7,18 +7,10 @@ seen in Nintendo games.
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-
+from panorama import binary, menu, nodes, plugins, text, utils, workspace
 import psutil
 import string
 import sys
-
-import binary
-import menu
-import nodes
-import plugins
-import text
-import utils
-import workspace
 
 
 class StatusBar(QStatusBar):
@@ -176,7 +168,7 @@ class MainWindow(QMainWindow):
         self._settings.setValue("workspace.paths", self._workspacePaths)
 
 
-if __name__ == "__main__":
+def main() -> None:
     if sys.platform == "linux":
         sys.argv += ["-platform", "xcb"]
     
@@ -185,3 +177,7 @@ if __name__ == "__main__":
     window = MainWindow(settings)
     window.show()
     app.exec()
+
+
+if __name__ == "__main__":
+    main()

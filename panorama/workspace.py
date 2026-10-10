@@ -3,14 +3,13 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-from plugins import Plugins
+from panorama import filesystem, nodes, signals
+from panorama.plugins import Plugins
+
 from typing import Callable
 
-import filesystem
-import nodes
 import os
 import qtawesome
-import signals
 
 
 class InvalidItem(nodes.Node):

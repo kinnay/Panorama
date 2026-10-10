@@ -1,10 +1,8 @@
 
 from PyQt6.QtWidgets import *
 
-import colors
-import nodes
-import plugins
-import properties
+from panorama import colors, nodes, plugins, properties
+
 import qtawesome
 import zstd
 

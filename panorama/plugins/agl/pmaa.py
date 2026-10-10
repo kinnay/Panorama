@@ -1,12 +1,12 @@
 
 from PyQt6.QtWidgets import *
+
 from jungle.errors import ParseError
 from jungle.agl import pmaa
 from jungle.db import hashes
-import colors
-import nodes
-import plugins
-import properties
+
+from panorama import colors, nodes, plugins, properties
+
 import qtawesome
 
 

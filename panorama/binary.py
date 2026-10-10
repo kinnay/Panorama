@@ -2,8 +2,8 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from panorama import signals
 import html
-import signals
 import string
 
 

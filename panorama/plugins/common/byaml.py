@@ -1,13 +1,13 @@
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+
 from jungle.common import byaml
 from jungle.errors import ParseError
-import colors
-import nodes
-import plugins
+
+from panorama import colors, nodes, plugins, widgets
+
 import qtawesome
-import widgets
 
 
 type ParentItem = QTreeWidget | QTreeWidgetItem
