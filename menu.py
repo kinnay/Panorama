@@ -3,34 +3,46 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 
-class Action(QAction):
-    def __init__(self, text: str, shortcut: str | None = None):
-        super().__init__(text)
-        if shortcut:
-            self.setShortcut(shortcut)
-
-
 class FileMenu(QMenu):
-    importFile: Action
-    importfolder: Action
-    reloadWorkspace: Action
+    importFile: QAction
+    importfolder: QAction
+    reloadWorkspace: QAction
 
     def __init__(self):
         super().__init__("File")
-        self.importFile = Action("Import File", "Ctrl+O")
-        self.importFolder = Action("Import Folder", "Ctrl+Shift+O")
-        self.reloadWorkspace = Action("Reload Workspace", "Ctrl+F5")
+        self.importFile = QAction("Import File")
+        self.importFile.setShortcut("Ctrl+O")
+
+        self.importFolder = QAction("Import Folder")
+        self.importFolder.setShortcut("Ctrl+Shift+O")
+
+        self.reloadWorkspace = QAction("Reload Workspace")
+        self.reloadWorkspace.setShortcut("Ctrl+F5")
 
         self.addAction(self.importFile)
         self.addAction(self.importFolder)
         self.addAction(self.reloadWorkspace)
 
 
+class WindowMenu(QMenu):
+    minimize: QAction
+
+    def __init__(self):
+        super().__init__("Window")
+        self.minimize = QAction("Minimize")
+        self.minimize.setShortcut("Ctrl+M")
+
+        self.addAction(self.minimize)
+
+
 class MenuBar(QMenuBar):
     file: FileMenu
+    window: WindowMenu
 
     def __init__(self):
         super().__init__()
         self.file = FileMenu()
+        self.window = WindowMenu()
         
         self.addMenu(self.file)
+        self.addMenu(self.window)

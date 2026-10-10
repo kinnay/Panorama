@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
         self._menu.file.reloadWorkspace.triggered.connect(
             self._handleReloadWorkspace
         )
+        self._menu.window.minimize.triggered.connect(self.showMinimized)
         self.setMenuBar(self._menu)
 
     def _initializeStatusBar(self) -> None:
