@@ -3,6 +3,8 @@ This project implements a viewer for various file formats that are seen in Ninte
 ## Installation
 This tool can be installed as follows: `pipx install panorama-tools`.
 
+To update the tool to the latest version, run `pipx upgrade panorama-tools`.
+
 After installation, the tool can be started by executing `panorama`.
 
 ## Features
