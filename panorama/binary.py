@@ -67,6 +67,8 @@ class TextStream:
 class BinaryContextMenu(QMenu):
     copy: QAction
     selectAll: QAction
+    find: QAction
+    findNext: QAction
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -78,9 +80,68 @@ class BinaryContextMenu(QMenu):
         self.selectAll.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
         self.selectAll.setShortcut(QKeySequence.StandardKey.SelectAll)
 
+        self.find = QAction("Find")
+        self.find.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditFind))
+        self.find.setShortcut(QKeySequence.StandardKey.Find)
+
+        self.findNext = QAction("Find Next")
+        self.findNext.setShortcut(QKeySequence.StandardKey.FindNext)
+
         self.addAction(self.copy)
         self.addSeparator()
         self.addAction(self.selectAll)
+        self.addSeparator()
+        self.addAction(self.find)
+        self.addAction(self.findNext)
+
+
+class BinaryFindDialog(QDialog):
+    _text: QLineEdit
+    _hex: QLineEdit
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Find")
+
+        self._text = QLineEdit()
+        self._text.textEdited.connect(self._handleTextEdited)
+
+        self._hex = QLineEdit()
+        self._hex.textEdited.connect(self._handleHexEdited)
+
+        findButton = QPushButton("Find")
+        findButton.clicked.connect(self.accept)
+
+        cancelButton = QPushButton("Cancel")
+        cancelButton.clicked.connect(self.reject)
+
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(findButton)
+        buttonLayout.addWidget(cancelButton)
+
+        layout = QFormLayout(self)
+        layout.addRow("Text:", self._text)
+        layout.addRow("Hex:", self._hex)
+        layout.addRow(buttonLayout)
+    
+    def data(self) -> bytes:
+        text = self._hex.text()
+        return bytes.fromhex(text)
+    
+    def _handleTextEdited(self, text: str) -> None:
+        self._hex.setText(text.encode("charmap").hex())
+
+    def _handleHexEdited(self, text: str) -> None:
+        filtered = ""
+        for char in text.lower():
+            if char in string.hexdigits:
+                filtered += char
+
+        self._hex.setText(filtered)
+
+        data = self.data()
+        self._text.setText(data.decode("charmap"))
 
 
 class BinaryView(QTextEdit):
@@ -145,6 +206,9 @@ class BinaryView(QTextEdit):
     outside of the view.
     """
 
+    _lastSearch: bytes | None
+    """The data that was searched for previously."""
+
     def __init__(self, data: bytes):
         super().__init__()
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -172,6 +236,8 @@ class BinaryView(QTextEdit):
 
         self._mousePos = 0
 
+        self._lastSearch = None
+
         self._timer = QTimer()
         self._timer.timeout.connect(self._updateScroll)
         self._timer.setInterval(50)
@@ -193,9 +259,14 @@ class BinaryView(QTextEdit):
     def contextMenuEvent(self, e: QContextMenuEvent) -> None:
         menu = BinaryContextMenu(self)
         menu.copy.setEnabled(self._selectionEnd > self._selectionStart)
+        menu.findNext.setEnabled(self._lastSearch is not None)
 
         menu.copy.triggered.connect(self._handleCopy)
+
         menu.selectAll.triggered.connect(self._handleSelectAll)
+
+        menu.find.triggered.connect(self._handleFind)
+        menu.findNext.triggered.connect(self._handleFindNext)
 
         menu.exec(e.globalPos())
 
@@ -268,6 +339,10 @@ class BinaryView(QTextEdit):
             self._handleCopy()
         elif e.matches(QKeySequence.StandardKey.SelectAll):
             self._handleSelectAll()
+        elif e.matches(QKeySequence.StandardKey.Find):
+            self._handleFind()
+        elif e.matches(QKeySequence.StandardKey.FindNext):
+            self._handleFindNext()
     
     def _checkNavigationKeys(self, e: QKeyEvent) -> None:
         key = e.key()
@@ -345,6 +420,34 @@ class BinaryView(QTextEdit):
 
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(text)
+
+    def _handleFind(self) -> None:
+        dialog = BinaryFindDialog(self)
+        result = dialog.exec()
+        if result != QDialog.DialogCode.Accepted:
+            return
+        
+        self._lastSearch = dialog.data()
+        self._handleFindNext(False)
+    
+    def _handleFindNext(self, skipCurrent: bool = True) -> None:
+        pos = self._data.find(self._lastSearch, self._cursorAddr + skipCurrent)
+        if pos == -1:
+            QMessageBox.information(
+                self, "Not found",
+                "Could not find the given text between the cursor and the end "
+                "of the document."
+            )
+            return
+
+        self._cursorAddr = pos
+        self._cursorOffset = 0
+
+        self._selectionAnchor = pos
+        self._selectionStart = pos
+        self._selectionEnd = pos + len(self._lastSearch)
+
+        self._jumpToCursor()
     
     def _handleSelectAll(self) -> None:
         self._cursorAddr = len(self._data)
