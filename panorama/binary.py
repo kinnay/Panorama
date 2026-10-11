@@ -69,6 +69,7 @@ class BinaryContextMenu(QMenu):
     selectAll: QAction
     find: QAction
     findNext: QAction
+    jumpTo: QAction
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -85,7 +86,11 @@ class BinaryContextMenu(QMenu):
         self.find.setShortcut(QKeySequence.StandardKey.Find)
 
         self.findNext = QAction("Find Next")
+        self.findNext.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoNext))
         self.findNext.setShortcut(QKeySequence.StandardKey.FindNext)
+
+        self.jumpTo = QAction("Jump To")
+        self.jumpTo.setShortcut("G")
 
         self.addAction(self.copy)
         self.addSeparator()
@@ -93,6 +98,8 @@ class BinaryContextMenu(QMenu):
         self.addSeparator()
         self.addAction(self.find)
         self.addAction(self.findNext)
+        self.addSeparator()
+        self.addAction(self.jumpTo)
 
 
 class BinaryFindDialog(QDialog):
@@ -142,6 +149,47 @@ class BinaryFindDialog(QDialog):
 
         data = self.data()
         self._text.setText(data.decode("charmap"))
+
+
+class BinaryJumpDialog(QDialog):
+    _address: QLineEdit
+
+    _jumpButton: QPushButton
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Jump To")
+
+        self._address = QLineEdit()
+        self._address.textEdited.connect(self._handleAddressEdited)
+
+        self._jumpButton = QPushButton("Jump")
+        self._jumpButton.clicked.connect(self.accept)
+        self._jumpButton.setEnabled(False)
+
+        cancelButton = QPushButton("Cancel")
+        cancelButton.clicked.connect(self.reject)
+
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self._jumpButton)
+        buttonLayout.addWidget(cancelButton)
+
+        layout = QFormLayout(self)
+        layout.addRow("Address (hex):", self._address)
+        layout.addRow(buttonLayout)
+    
+    def address(self) -> int:
+        return int(self._address.text(), 16)
+    
+    def _handleAddressEdited(self, text: str) -> None:
+        filtered = ""
+        for char in text.upper():
+            if char in string.hexdigits:
+                filtered += char
+        
+        self._address.setText(filtered)
+        self._jumpButton.setEnabled(bool(filtered))
 
 
 class BinaryView(QTextEdit):
@@ -268,6 +316,8 @@ class BinaryView(QTextEdit):
         menu.find.triggered.connect(self._handleFind)
         menu.findNext.triggered.connect(self._handleFindNext)
 
+        menu.jumpTo.triggered.connect(self._handleJumpTo)
+
         menu.exec(e.globalPos())
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
@@ -335,6 +385,7 @@ class BinaryView(QTextEdit):
         self._checkNavigationKeys(e)
     
     def _checkKeySequence(self, e: QKeyEvent) -> None:
+        key = e.key()
         if e.matches(QKeySequence.StandardKey.Copy):
             self._handleCopy()
         elif e.matches(QKeySequence.StandardKey.SelectAll):
@@ -343,6 +394,8 @@ class BinaryView(QTextEdit):
             self._handleFind()
         elif e.matches(QKeySequence.StandardKey.FindNext):
             self._handleFindNext()
+        elif key == Qt.Key.Key_G:
+            self._handleJumpTo()
     
     def _checkNavigationKeys(self, e: QKeyEvent) -> None:
         key = e.key()
@@ -421,6 +474,18 @@ class BinaryView(QTextEdit):
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(text)
 
+    def _handleSelectAll(self) -> None:
+        self._cursorAddr = len(self._data)
+        self._cursorOffset = 0
+
+        self._selectionStart = 0
+        self._selectionAnchor = 0
+        self._selectionEnd = len(self._data)
+
+        self._clampCursor()
+        self._updateText()
+        self._jumpToCursor()
+
     def _handleFind(self) -> None:
         dialog = BinaryFindDialog(self)
         result = dialog.exec()
@@ -431,6 +496,9 @@ class BinaryView(QTextEdit):
         self._handleFindNext(False)
     
     def _handleFindNext(self, skipCurrent: bool = True) -> None:
+        if self._lastSearch is None:
+            return
+        
         pos = self._data.find(self._lastSearch, self._cursorAddr + skipCurrent)
         if pos == -1:
             QMessageBox.information(
@@ -449,16 +517,18 @@ class BinaryView(QTextEdit):
 
         self._jumpToCursor()
     
-    def _handleSelectAll(self) -> None:
-        self._cursorAddr = len(self._data)
+    def _handleJumpTo(self) -> None:
+        dialog = BinaryJumpDialog(self)
+        result = dialog.exec()
+        if result != QDialog.DialogCode.Accepted:
+            return
+        
+        pos = min(max(dialog.address(), 0), len(self._data))
+
+        self._cursorAddr = pos
         self._cursorOffset = 0
-
-        self._selectionStart = 0
-        self._selectionAnchor = 0
-        self._selectionEnd = len(self._data)
-
+        self._clearSelection()
         self._clampCursor()
-        self._updateText()
         self._jumpToCursor()
     
     def _jumpToCursor(self) -> None:
