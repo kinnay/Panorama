@@ -45,8 +45,8 @@ class ImageNode(nodes.File):
 
 class ImagePlugin:
     def analyze(self, data: bytes) -> bool:
-        # We only detect JPEG for now
-        return data[:2] == b"\xFF\xD8"
+        # We only detect JPEG and PNG for now
+        return data[:2] == b"\xFF\xD8" or data[:4] == b"\x89PNG"
 
     def create(
         self, plugins: plugins.Plugins, reader: nodes.Reader
