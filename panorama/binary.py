@@ -400,7 +400,15 @@ class BinaryView(QTextEdit):
     def _checkNavigationKeys(self, e: QKeyEvent) -> None:
         key = e.key()
 
-        if key == Qt.Key.Key_Left:
+        if e.matches(QKeySequence.StandardKey.MoveToStartOfDocument):
+            self._cursorAddr = 0
+            self._cursorOffset = 0
+        
+        elif e.matches(QKeySequence.StandardKey.MoveToEndOfDocument):
+            self._cursorAddr = len(self._data)
+            self._cursorOffset = 0
+
+        elif key == Qt.Key.Key_Left:
             if self._cursorOffset != 0:
                 self._cursorOffset = 0
             elif self._cursorAddr > 0:
@@ -527,8 +535,8 @@ class BinaryView(QTextEdit):
 
         self._cursorAddr = pos
         self._cursorOffset = 0
-        self._clearSelection()
         self._clampCursor()
+        self._clearSelection()
         self._jumpToCursor()
     
     def _jumpToCursor(self) -> None:
