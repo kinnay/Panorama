@@ -67,7 +67,7 @@ class TextStream:
 class BinaryContextMenu(QMenu):
     copy: QAction
     selectAll: QAction
-    find: QAction
+    findAction: QAction
     findNext: QAction
     jumpTo: QAction
 
@@ -81,9 +81,9 @@ class BinaryContextMenu(QMenu):
         self.selectAll.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
         self.selectAll.setShortcut(QKeySequence.StandardKey.SelectAll)
 
-        self.find = QAction("Find")
-        self.find.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditFind))
-        self.find.setShortcut(QKeySequence.StandardKey.Find)
+        self.findAction = QAction("Find")
+        self.findAction.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditFind))
+        self.findAction.setShortcut(QKeySequence.StandardKey.Find)
 
         self.findNext = QAction("Find Next")
         self.findNext.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoNext))
@@ -96,7 +96,7 @@ class BinaryContextMenu(QMenu):
         self.addSeparator()
         self.addAction(self.selectAll)
         self.addSeparator()
-        self.addAction(self.find)
+        self.addAction(self.findAction)
         self.addAction(self.findNext)
         self.addSeparator()
         self.addAction(self.jumpTo)
@@ -313,7 +313,7 @@ class BinaryView(QTextEdit):
 
         menu.selectAll.triggered.connect(self._handleSelectAll)
 
-        menu.find.triggered.connect(self._handleFind)
+        menu.findAction.triggered.connect(self._handleFind)
         menu.findNext.triggered.connect(self._handleFindNext)
 
         menu.jumpTo.triggered.connect(self._handleJumpTo)

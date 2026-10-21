@@ -13,22 +13,6 @@ import qtawesome
 type ParentItem = QTreeWidget | QTreeWidgetItem
 
 
-TypeNames = {
-    byaml.BYAMLNodeType.HASHMAP: "Hash",
-    byaml.BYAMLNodeType.STRING: "String",
-    byaml.BYAMLNodeType.BINARY: "Binary",
-    byaml.BYAMLNodeType.ARRAY: "Array",
-    byaml.BYAMLNodeType.DICT: "Dict",
-    byaml.BYAMLNodeType.BOOL: "Bool",
-    byaml.BYAMLNodeType.INT: "Int",
-    byaml.BYAMLNodeType.FLOAT: "Float",
-    byaml.BYAMLNodeType.UINT: "UInt",
-    byaml.BYAMLNodeType.INT64: "Int64",
-    byaml.BYAMLNodeType.UINT64: "UInt64",
-    byaml.BYAMLNodeType.DOUBLE: "Double",
-    byaml.BYAMLNodeType.NULL: "Null"
-}
-
 
 class BYAMLWidget(widgets.ScaledTreeWidget):
     def __init__(self, file: byaml.BYAMLFile):
@@ -57,7 +41,7 @@ class BYAMLWidget(widgets.ScaledTreeWidget):
     def _createItem(
         self, parent: ParentItem, key: str, node: byaml.BYAMLNode
     ) -> None:
-        typename = TypeNames[node.type()]
+        typename = node.type().name
         if isinstance(node, byaml.BYAMLArray):
             item = QTreeWidgetItem(parent, [key, "", typename])
             self._addArray(item, node)

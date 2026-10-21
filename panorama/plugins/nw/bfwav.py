@@ -17,8 +17,8 @@ Endianness = {
 }
 
 SampleFormat = {
-    bfwav.SampleFormat.PCM_8: "PCM-8",
-    bfwav.SampleFormat.PCM_16: "PCM-16",
+    bfwav.SampleFormat.PCM8: "PCM-8",
+    bfwav.SampleFormat.PCM16: "PCM-16",
     bfwav.SampleFormat.ADPCM: "ADPCM"
 }
 
@@ -31,7 +31,7 @@ def formatTime(time: int) -> str:
 
 
 def decodeChannel(file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel) -> bytes:
-    if file.sample_format == bfwav.SampleFormat.PCM_8:
+    if file.sample_format == bfwav.SampleFormat.PCM8:
         return audio.decode_pcm8(channel.data)
     elif file.sample_format == bfwav.SampleFormat.ADPCM:
         return audio.decode_adpcm(

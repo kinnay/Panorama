@@ -9,39 +9,33 @@ from panorama import colors, nodes, plugins, properties
 import qtawesome
 
 
-AssetTypes = {
-    bameta.AssetType.WAVE: "Wave",
-    bameta.AssetType.STREAM: "Stream"
-}
-
-
 class BAMETAWidget(properties.PropertyView):
     def __init__(self, file: bameta.BAMETAFile):
         super().__init__()
 
-        props = {
+        props: properties.PropertyDict = {
             "Endianness": "Big" if file.endianness == ">" else "Little",
             "Version": f"0x{file.version:X}",
             "Name": file.name,
-            "Type:": AssetTypes[file.type],
+            "Type:": file.type.name,
             "Number of channels": file.num_channels,
             "Number of samples": file.num_samples,
             "Number of samples (48000 Hz)": file.num_output_samples,
             "Sample rate": file.sample_rate,
-            "Is looped": "Yes" if file.flags & bameta.Flags.LOOPED else "No"
+            "Is looped": "Yes" if file.flags & bameta.Flags.Looped else "No"
         }
 
-        if file.flags & bameta.Flags.LOOPED:
+        if file.flags & bameta.Flags.Looped:
             props["Loop start sample"] = file.loop_start
-        
-        props["Unknown flag 1"] = "Yes" if file.flags & 1 else "No"
-        props["Unknown flag 2"] = "Yes" if file.flags & 2 else "No"
-        props["Unknown flag 8"] = "Yes" if file.flags & 8 else "No"
-        props["Unknown flag 16"] = "Yes" if file.flags & 16 else "No"
 
-        props["Unknown"] = file.unk2
-        props["Volume (decibel)"] = file.decibel
-        props["Amplitude peak"] = file.amplitude_peak
+        props["Is stream"] = "Yes" if file.flags & bameta.Flags.Stream else "No"
+        props["Has prefetch data"] = \
+            "Yes" if file.flags & bameta.Flags.Prefetch else "No"
+        props["Is opus"] = "Yes" if file.flags & bameta.Flags.Opus else "No"
+
+        props["RMS amplitude"] = file.amplitude_rms
+        props["Loudness"] = 10 ** (file.loudness / 20)
+        props["Peak amplitude"] = file.amplitude_peak
 
         if file.stream_tracks:
             tracks = []

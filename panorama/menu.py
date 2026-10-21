@@ -37,12 +37,12 @@ class WindowMenu(QMenu):
 
 class MenuBar(QMenuBar):
     file: FileMenu
-    window: WindowMenu
+    windowMenu: WindowMenu
 
     def __init__(self):
         super().__init__()
         self.file = FileMenu()
-        self.window = WindowMenu()
+        self.windowMenu = WindowMenu()
         
         self.addMenu(self.file)
-        self.addMenu(self.window)
+        self.addMenu(self.windowMenu)
