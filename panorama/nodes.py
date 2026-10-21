@@ -1,6 +1,5 @@
 
 from PyQt6.QtWidgets import *
-import mmap
 
 
 class Node(QTreeWidgetItem):
@@ -78,7 +77,7 @@ class File(Node):
     def reader(self) -> Reader:
         return self._reader
 
-    def read(self) -> bytes | mmap.mmap:
+    def read(self) -> bytes:
         return self._reader.read()
 
 
@@ -92,11 +91,8 @@ class Reader:
         """
         raise NotImplementedError(f"{self.__class__.__name__}.filename()")
     
-    def read(self) -> bytes | mmap.mmap:
-        """
-        Returns the content of the file, either as a bytes object or an mmap
-        object for large files.
-        """
+    def read(self) -> bytes:
+        """Returns the content of the file."""
         raise NotImplementedError(f"{self.__class__.__name__}.read()")
 
 

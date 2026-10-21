@@ -2,9 +2,10 @@
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from panorama import widgets
-from typing import Any
+from typing import Any, Mapping
 
 
+type PropertyMapping = Mapping[Any, PropertyValue]
 type PropertyDict = dict[Any, PropertyValue]
 type PropertyList = list[PropertyValue]
 type PropertyValue = PropertyList | PropertyDict | object
@@ -14,7 +15,7 @@ type ParentItem = QTreeWidget | QTreeWidgetItem
 class PropertyView(widgets.ScaledTreeWidget):
     """This widget provides a simple way to display a tree of properties."""
     
-    def __init__(self, props: PropertyList | PropertyDict | None = None):
+    def __init__(self, props: PropertyList | PropertyMapping | None = None):
         super().__init__()
         self.setHeaderLabels(["Field", "Value"])
         self.setAlternatingRowColors(True)
@@ -24,7 +25,7 @@ class PropertyView(widgets.ScaledTreeWidget):
         if props is not None:
             self.setProperties(props)
 
-    def setProperties(self, props: PropertyList | PropertyDict) -> None:
+    def setProperties(self, props: PropertyList | PropertyMapping) -> None:
         self.clear()
         if isinstance(props, list):
             self._addList(props, self)
@@ -35,7 +36,7 @@ class PropertyView(widgets.ScaledTreeWidget):
         for i, value in enumerate(props):
             self._addProperty(parent, str(i), value)
     
-    def _addDict(self, props: PropertyDict, parent: ParentItem) -> None:
+    def _addDict(self, props: PropertyMapping, parent: ParentItem) -> None:
         for key, value in props.items():
             self._addProperty(parent, key, value)
     

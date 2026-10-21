@@ -5,8 +5,6 @@ Provides nodes for files and folders that are stored on disk.
 
 from PyQt6.QtWidgets import *
 from panorama import nodes, plugins
-import io
-import mmap
 import os
 import qtawesome
 
@@ -25,19 +23,10 @@ class FileReader(nodes.Reader):
     def filename(self) -> str:
         return os.path.basename(self._path)
     
-    def read(self) -> bytes | mmap.mmap:
-        """
-        Opens the file. Files that are smaller than 1 MB are read completely
-        into memory. Larger files are mapped with mmap.
-        """
+    def read(self) -> bytes:
+        """Opens the file."""
         with open(self._path, "rb") as f:
-            f.seek(0, io.SEEK_END)
-            size = f.tell()
-            f.seek(0)
-
-            if size < 1024 * 1024:
-                return f.read()
-            return mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+            return f.read()
 
 
 class Folder(nodes.Node):

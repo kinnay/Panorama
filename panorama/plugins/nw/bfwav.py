@@ -54,7 +54,7 @@ class AudioBuffer(QIODevice):
     def size(self) -> int:
         return len(self._data)
     
-    def setLoopPos(self, pos: int) -> None:
+    def setLoopPos(self, pos: int | None) -> None:
         self._loopPos = pos
         
         self._loopSize = None
@@ -136,11 +136,11 @@ class AudioChannel:
         self._sink = QAudioSink(QMediaDevices.defaultAudioOutput(), format)
         self._sink.stateChanged.connect(self._handleStateChanged)
             
-    def setLoopPos(self, pos: int) -> None:
+    def setLoopPos(self, pos: int | None) -> None:
         self._loopPos = pos
         
         self._loopSize = None
-        if self._loopPos is not None:
+        if pos is not None:
             self._loopSize = self._numSamples - pos
             self._buffer.setLoopPos(pos * 2)
         else:

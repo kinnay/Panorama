@@ -5,7 +5,7 @@ from jungle.errors import ParseError
 from jungle.lms import msbt
 
 from panorama import colors, nodes, plugins
-from panorama.properties import PropertyView, PropertyDict
+from panorama.properties import PropertyView, PropertyDict, PropertyList
 
 import qtawesome
 
@@ -18,7 +18,7 @@ class MSBTWidget(PropertyView):
         for name, message in file.messages.items():
             info: PropertyDict = {}
 
-            text = []
+            text: PropertyList = []
             for component in message.content:
                 if isinstance(component, str):
                     text.append(component)
