@@ -34,6 +34,7 @@ def decodeChannel(file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel) -> bytes:
     if file.sample_format == bfwav.SampleFormat.PCM8:
         return audio.decode_pcm8(channel.data)
     elif file.sample_format == bfwav.SampleFormat.ADPCM:
+        assert channel.adpcm_info
         return audio.decode_adpcm(
             channel.data, file.num_samples, channel.adpcm_info.coefs
         )
@@ -405,7 +406,10 @@ class BFWAVProperties(properties.PropertyView):
     def _makeChannel(
         self, file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel
     ) -> properties.PropertyDict:
-        props = {
+        if channel.adpcm_info is None:
+            raise ValueError("Expected ADPCM info in channel object")
+        
+        props: properties.PropertyDict = {
             "ADPCM coefficients": channel.adpcm_info.coefs
         }
 

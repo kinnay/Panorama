@@ -80,11 +80,13 @@ class MainWindow(QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
         else:
-            screen = self.screen().size()
-            self.setGeometry(
-                screen.width() // 4, screen.height() // 4,
-                screen.width() // 2, screen.height() // 2
-            )
+            screen = self.screen()
+            if screen:
+                size = screen.size()
+                self.setGeometry(
+                    size.width() // 4, size.height() // 4,
+                    size.width() // 2, size.height() // 2
+                )
 
     def _initializeMenuBar(self) -> None:
         self._menu = menu.MenuBar()

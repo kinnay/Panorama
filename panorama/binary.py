@@ -260,7 +260,10 @@ class BinaryView(QTextEdit):
     def __init__(self, data: bytes):
         super().__init__()
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.verticalScrollBar().valueChanged.connect(self._resetScroll)
+
+        scrollBar = self.verticalScrollBar()
+        if scrollBar:
+            scrollBar.valueChanged.connect(self._resetScroll)
 
         self._data = data
 
@@ -367,7 +370,9 @@ class BinaryView(QTextEdit):
     
     def _resetScroll(self) -> None:
         """Disables functionality of the scroll bar."""
-        self.verticalScrollBar().setValue(0)
+        scrollBar = self.verticalScrollBar()
+        if scrollBar:
+            scrollBar.setValue(0)
 
     def _updateScroll(self) -> None:
         """
@@ -480,7 +485,8 @@ class BinaryView(QTextEdit):
             text = data.hex()
 
         clipboard = QGuiApplication.clipboard()
-        clipboard.setText(text)
+        if clipboard:
+            clipboard.setText(text)
 
     def _handleSelectAll(self) -> None:
         self._cursorAddr = len(self._data)
