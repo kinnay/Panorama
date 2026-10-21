@@ -52,13 +52,14 @@ class Plugins:
 			bdf.BDFPlugin(),
 			bfwav.BFWAVPlugin(),
 			byaml.BYAMLPlugin(),
-			image.ImagePlugin(),
 			msbp.MSBPPlugin(),
 			msbt.MSBTPlugin(),
 			pmaa.PMAAPlugin(),
 			sarc.SARCPlugin(),
 			yaz0.Yaz0Plugin(),
-			zstd.ZstdPlugin()
+			zstd.ZstdPlugin(),
+
+			image.ImagePlugin(),
 		]
 		self._default = DefaultPlugin()
 	

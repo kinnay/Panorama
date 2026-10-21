@@ -4,23 +4,24 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.switch import bdf
 
-from panorama import colors, nodes, plugins, properties, utils
+from panorama import colors, nodes, plugins, utils
 
 import qtawesome
 
 
-class BDFWidget(properties.PropertyView):
+class BDFWidget(QTreeWidget):
     def __init__(self, file: bdf.BDFFile):
         super().__init__()
+        self.setHeaderLabels(["ID", "Status", "Size"])
+        self.setAlternatingRowColors(True)
 
-        props = {}
         for entry in file.entries:
-            props[entry.id] = {
-                "Status": entry.status.name,
-                "Size": utils.formatSize(len(entry.data))
-            }
-
-        self.setProperties(props)
+            QTreeWidgetItem(
+                self, [
+                    str(entry.id), entry.status.name,
+                    utils.formatSize(len(entry.data))
+                ]
+            )
 
 
 class BDFNode(nodes.File):
