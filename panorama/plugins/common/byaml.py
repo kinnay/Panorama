@@ -5,9 +5,10 @@ from PyQt6.QtWidgets import *
 from jungle.common import byaml
 from jungle.errors import ParseError
 
-from panorama import colors, nodes, plugins, widgets
+from panorama import colors, nodes, plugins, text, widgets
 
 import qtawesome
+import yaml
 
 
 type ParentItem = QTreeWidget | QTreeWidgetItem
@@ -78,7 +79,11 @@ class BYAMLNode(nodes.File):
     def createWidgets(self) -> dict[str, QWidget]:
         widgets: dict[str, QWidget] = {}
         if self._file:
+            object = byaml.create_python_object(self._file.root)
+            data = yaml.dump(object)
+
             widgets["BYAML"] = BYAMLWidget(self._file)
+            widgets["YAML"] = text.TextWidget(data)
         return widgets
 
 
