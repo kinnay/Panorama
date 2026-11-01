@@ -22,11 +22,17 @@ class MSBTWidget(PropertyView):
             for component in message.content:
                 if isinstance(component, str):
                     text.append(component)
-                else:
+                elif isinstance(component, msbt.Tag):
                     tag = {
                         "Group id": component.group,
                         "Tag id": component.tag,
                         "Parameters": component.parameters.hex()
+                    }
+                    text.append(tag)
+                else:
+                    tag = {
+                        "End group id": component.group,
+                        "End tag id": component.tag
                     }
                     text.append(tag)
 
