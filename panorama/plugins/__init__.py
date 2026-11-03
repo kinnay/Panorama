@@ -1,7 +1,7 @@
 
 from panorama import nodes
 from panorama.plugins import image, zstd
-from panorama.plugins.aal import bameta, bars, barslist
+from panorama.plugins.aal import baatn, bameta, baroc, bars, barslist
 from panorama.plugins.agl import pmaa
 from panorama.plugins.common import byaml
 from panorama.plugins.lms import msbp, msbt
@@ -46,7 +46,9 @@ class Plugins:
 
 	def __init__(self):
 		self._plugins = [
+			baatn.BAATNPlugin(),
 			bameta.BAMETAPlugin(),
+			baroc.BAROCPlugin(),
 			bars.BARSPlugin(),
 			barslist.BARSLISTPlugin(),
 			bdf.BDFPlugin(),
