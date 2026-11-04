@@ -289,7 +289,7 @@ class BinaryView(QTextEdit):
 
         self._lastSearch = None
 
-        self._timer = QTimer()
+        self._timer = QTimer(self)
         self._timer.timeout.connect(self._updateScroll)
         self._timer.setInterval(50)
         self._timer.start()
@@ -712,7 +712,7 @@ class BinaryWidget(QWidget):
     _view: BinaryView
     _layout: QHBoxLayout
 
-    def __init__(self, data):
+    def __init__(self, data: bytes):
         super().__init__()
         self._data = data
             

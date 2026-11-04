@@ -8,6 +8,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from panorama import binary, menu, nodes, plugins, text, utils, workspace
+
+import gc
 import psutil
 import string
 import sys
@@ -164,6 +166,12 @@ class MainWindow(QMainWindow):
             for name, widget in widgets.items():
                 tabs.addTab(widget, name)
             self.setCentralWidget(tabs)
+
+            # This significantly reduces the memory usage when a large file was
+            # opened. The garbage collector does not always run automatically,
+            # because its threshold depends on the number of allocations, and
+            # not the size of the allocations.
+            gc.collect()
     
     def _handleItemRemoved(self, path: str) -> None:
         self._workspacePaths.remove(path)
