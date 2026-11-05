@@ -95,6 +95,9 @@ class Reader:
         """Returns the content of the file."""
         raise NotImplementedError(f"{self.__class__.__name__}.read()")
 
+    def metadata(self) -> bytes | None:
+        return None
+
 
 class MemoryReader(Reader):
     """A basic reader for files that have been loaded in memory."""
@@ -102,12 +105,21 @@ class MemoryReader(Reader):
     _filename: str
     _data: bytes
 
-    def __init__(self, filename: str, data: bytes):
+    _metadata: bytes | None = None
+
+    def __init__(
+        self, filename: str, data: bytes, *, metadata: bytes | None = None
+    ):
         self._filename = filename
         self._data = data
+
+        self._metadata = metadata
     
     def filename(self) -> str:
         return self._filename
 
     def read(self) -> bytes:
         return self._data
+
+    def metadata(self) -> bytes | None:
+        return self._metadata

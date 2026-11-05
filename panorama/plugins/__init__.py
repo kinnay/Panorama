@@ -4,7 +4,7 @@ from panorama.plugins import image, zstd
 from panorama.plugins.aal import baatn, bameta, baroc, bars, barslist
 from panorama.plugins.agl import pmaa
 from panorama.plugins.common import byaml
-from panorama.plugins.dkctf import pak
+from panorama.plugins.dkctf import pak, txtr
 from panorama.plugins.lms import msbp, msbt
 from panorama.plugins.nw import bfwav
 from panorama.plugins.sead import sarc, yaz0
@@ -63,6 +63,7 @@ class Plugins:
 			zstd.ZstdPlugin(),
 
 			pak.PAKPlugin(),
+			txtr.TXTRPlugin(),
 
 			image.ImagePlugin(),
 		]

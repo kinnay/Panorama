@@ -11,16 +11,18 @@ import qtawesome
 
 class PAKFileNode(nodes.Node):
     def __init__(
-        self, plugins: plugins.Plugins, asset: pak.PAKAsset, id: str
+        self, plugins: plugins.Plugins, archive: pak.PAKFile,
+        asset: pak.PAKAsset, id: str
     ):
         super().__init__()
         self.setText(0, asset.filename or id)
 
-        reader = nodes.MemoryReader("File", asset.data)
+        reader = nodes.MemoryReader("File", asset.data, metadata=asset.metadata)
         self.addChild(plugins.create(reader))
 
-        reader = nodes.MemoryReader("Metadata", asset.metadata)
-        self.addChild(plugins.create(reader))
+        if asset.metadata is not None:
+            reader = nodes.MemoryReader("Metadata", asset.metadata)
+            self.addChild(plugins.create(reader))
 
 
 class PAKFolderNode(nodes.Node):
@@ -35,7 +37,7 @@ class PAKFolderNode(nodes.Node):
                 continue
 
             if asset.metadata:
-                node = PAKFileNode(plugins, asset, id)
+                node = PAKFileNode(plugins, file, asset, id)
                 self.addChild(node)
             else:
                 filename = asset.filename or id

@@ -32,9 +32,7 @@ class ImageNode(nodes.File):
             self._image = None
 
         self.setText(0, reader.filename())
-        self.setIcon(
-            0, qtawesome.icon("fa6s.image", color=colors.GRAPHICS)
-        )
+        self.setIcon(0, qtawesome.icon("fa6s.image", color=colors.GRAPHICS))
 
     def createWidgets(self) -> dict[str, QWidget]:
         widgets: dict[str, QWidget] = {}
