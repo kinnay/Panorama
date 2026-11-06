@@ -1,9 +1,13 @@
 
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from jungle.errors import ParseError
 from jungle.gfd import gfx2
-from jungle.gx2.textures import GX2Texture
+from jungle.gx2.textures import GX2Texture, GX2SurfaceDim
+
+from ninty import gx2
 
 from panorama import colors, nodes, plugins, utils
 from panorama.widgets import PropertyView
@@ -55,6 +59,38 @@ class Gfx2TextureWidget(PropertyView):
         self.setProperties(props)
 
 
+class Gfx2TextureViewer(QWidget):
+    def __init__(self, texture: GX2Texture):
+        super().__init__()
+        surface = texture.surface
+
+        label = QLabel()
+        if surface.dim != GX2SurfaceDim.Texture2D:
+            label.setText(f"Unsupported surface dim: {surface.dim}")
+        elif surface.depth != 1:
+            label.setText(f"Unsupported surface depth: {surface.depth}")
+        else:
+            format = (surface.type << 8) | surface.format
+            deswizzled = gx2.deswizzle(
+                surface.image, surface.width, surface.height, format,
+                surface.tile_mode, (surface.swizzle >> 8) & 0xFF
+            )
+            decoded = gx2.decode(
+                deswizzled, surface.width, surface.height, format
+            )
+
+            image = QImage(
+                decoded, surface.width, surface.height,
+                QImage.Format.Format_RGBA8888
+            )
+            pixmap = QPixmap.fromImage(image)
+            label.setPixmap(pixmap)
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+
+
 class Gfx2TextureNode(nodes.Node):
     _texture: GX2Texture
 
@@ -68,7 +104,8 @@ class Gfx2TextureNode(nodes.Node):
 
     def createWidgets(self) -> dict[str, QWidget]:
         return {
-            "Texture": Gfx2TextureWidget(self._texture)
+            "Metadata": Gfx2TextureWidget(self._texture),
+            "Texture": Gfx2TextureViewer(self._texture)
         }
 
 

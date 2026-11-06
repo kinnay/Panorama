@@ -84,7 +84,9 @@ class TXTRViewer(QWidget):
         if header.type != txtr.TextureType.Texture2D:
             label.setText(f"Unsupported texture type: {header.type.name}")
         elif header.format not in SurfaceFormats:
-            label.setText(f"Unsupported texture format: {header.format.name}")
+            label.setText(f"Unsupported texture format: {header.ormat.name}")
+        elif header.depth != 1:
+            label.setText(f"Unsupported texture depth: {header.depth}")
         else:
             type, format = SurfaceFormats[header.format]
             format_value = (type << 8) | format
