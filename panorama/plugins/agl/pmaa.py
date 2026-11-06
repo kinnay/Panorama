@@ -5,12 +5,13 @@ from jungle.errors import ParseError
 from jungle.agl import pmaa
 from jungle.db import hashes
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
 
-class PMAAWidget(properties.PropertyView):
+class PMAAWidget(PropertyView):
     def __init__(self, file: pmaa.PMAAFile):
         super().__init__()
         
@@ -24,8 +25,8 @@ class PMAAWidget(properties.PropertyView):
             return f"{hash:08x}"
         return name
 
-    def _makeList(self, list: pmaa.ParameterList) -> properties.PropertyDict:
-        props: properties.PropertyDict = {}
+    def _makeList(self, list: pmaa.ParameterList) -> PropertyDict:
+        props: PropertyDict = {}
         for child in list.children:
             props[self._makeName(child.hash)] = self._makeList(child)
         for object in list.objects:
@@ -36,7 +37,7 @@ class PMAAWidget(properties.PropertyView):
 
     def _makeObject(
         self, object: pmaa.ParameterObject
-    ) -> properties.PropertyDict:
+    ) -> PropertyDict:
         props = {}
         for parameter in object.parameters:
             props[self._makeName(parameter.hash)] = parameter.value

@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import *
 from jungle.common import byaml
 from jungle.errors import ParseError
 
-from panorama import colors, nodes, plugins, text, widgets
+from panorama import colors, nodes, plugins
+from panorama.widgets import ScaledTreeWidget, TextWidget
 
 import qtawesome
 import yaml
@@ -15,7 +16,7 @@ type ParentItem = QTreeWidget | QTreeWidgetItem
 
 
 
-class BYAMLWidget(widgets.ScaledTreeWidget):
+class BYAMLWidget(ScaledTreeWidget):
     def __init__(self, file: byaml.BYAMLFile):
         super().__init__()
         self.setHeaderLabels(["Field", "Value", "Type"])
@@ -83,7 +84,7 @@ class BYAMLNode(nodes.File):
             data = yaml.dump(object)
 
             widgets["BYAML"] = BYAMLWidget(self._file)
-            widgets["YAML"] = text.TextWidget(data)
+            widgets["YAML"] = TextWidget(data)
         return widgets
 
 

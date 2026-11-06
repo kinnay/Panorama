@@ -5,7 +5,7 @@ from jungle.errors import ParseError
 from jungle.lms import msbt
 
 from panorama import colors, nodes, plugins
-from panorama.properties import PropertyView, PropertyDict, PropertyList
+from panorama.widgets import PropertyView, PropertyDict, PropertyList
 
 import qtawesome
 

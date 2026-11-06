@@ -1,7 +1,9 @@
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-from panorama import widgets
+
+from panorama.widgets.tree import ScaledTreeWidget
+
 from typing import Any, Mapping
 
 
@@ -12,7 +14,7 @@ type PropertyValue = PropertyList | PropertyDict | object
 type ParentItem = QTreeWidget | QTreeWidgetItem
 
 
-class PropertyView(widgets.ScaledTreeWidget):
+class PropertyView(ScaledTreeWidget):
     """This widget provides a simple way to display a tree of properties."""
     
     def __init__(self, props: PropertyList | PropertyMapping | None = None):

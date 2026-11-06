@@ -12,3 +12,9 @@ def formatSize(size: int) -> str:
         fraction /= 1024
     
     return f"{fraction:.1f} {units[index]}B"
+
+
+def underscoreToNaturalText(text: str) -> str:
+    words = text.split("_")
+    words[0] = words[0].capitalize()
+    return " ".join(words)

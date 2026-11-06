@@ -7,7 +7,8 @@ seen in Nintendo games.
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-from panorama import binary, menu, nodes, plugins, text, utils, workspace
+from panorama import menu, nodes, plugins, utils, workspace
+from panorama.widgets import BinaryWidget, TextWidget
 
 import gc
 import psutil
@@ -158,8 +159,8 @@ class MainWindow(QMainWindow):
             data = item.read()
             if isinstance(data, bytes) and \
                all(chr(c) in string.printable for c in data):
-                widgets["Text"] = text.TextWidget(data.decode())
-            widgets["Hex"] = binary.BinaryWidget(data)
+                widgets["Text"] = TextWidget(data.decode())
+            widgets["Hex"] = BinaryWidget(data)
         
         if widgets:
             tabs = QTabWidget()

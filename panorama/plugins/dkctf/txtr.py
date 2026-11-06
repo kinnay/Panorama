@@ -9,25 +9,23 @@ from jungle.gx2.textures import GX2SurfaceFormat, GX2SurfaceType
 
 from ninty import gx2, lzss
 
-from panorama import colors, nodes, plugins, properties, utils
+from panorama import colors, nodes, plugins, utils
+from panorama.widgets import PropertyView
 
 import qtawesome
 
 
 SurfaceFormats = {
     txtr.TextureFormat.UNORM_R8_G8_B8_A8:
-        (GX2SurfaceType.UNORM << 8) | GX2SurfaceFormat.R8_G8_B8_A8,
+        (GX2SurfaceType.UNORM, GX2SurfaceFormat.R8_G8_B8_A8),
 
-    txtr.TextureFormat.UNORM_BC1:
-        (GX2SurfaceType.UNORM << 8) | GX2SurfaceFormat.BC1,
-    txtr.TextureFormat.UNORM_BC3:
-        (GX2SurfaceType.UNORM << 8) | GX2SurfaceFormat.BC3,
-    txtr.TextureFormat.UNORM_BC5:
-        (GX2SurfaceType.UNORM << 8) | GX2SurfaceFormat.BC5
+    txtr.TextureFormat.UNORM_BC1: (GX2SurfaceType.UNORM, GX2SurfaceFormat.BC1),
+    txtr.TextureFormat.UNORM_BC3: (GX2SurfaceType.UNORM, GX2SurfaceFormat.BC3),
+    txtr.TextureFormat.UNORM_BC5: (GX2SurfaceType.UNORM, GX2SurfaceFormat.BC5),
 }
 
 
-class TXTRWidget(properties.PropertyView):
+class TXTRWidget(PropertyView):
     def __init__(self, file: txtr.TXTRFile):
         super().__init__()
 
@@ -54,7 +52,7 @@ class TXTRWidget(properties.PropertyView):
         self.setProperties(props)
 
 
-class TXTRMetadataWidget(properties.PropertyView):
+class TXTRMetadataWidget(PropertyView):
     def __init__(self, metadata: txtr.TXTRMetadata):
         super().__init__()
 
@@ -88,13 +86,15 @@ class TXTRViewer(QWidget):
         elif header.format not in SurfaceFormats:
             label.setText(f"Unsupported texture format: {header.format.name}")
         else:
-            format = SurfaceFormats[header.format]
+            type, format = SurfaceFormats[header.format]
+            format_value = (type << 8) | format
+
             deswizzled = gx2.deswizzle(
-                data, header.width, header.height, format,
+                data, header.width, header.height, format_value,
                 header.tile_mode, header.swizzle
             )
             decoded = gx2.decode(
-                deswizzled, header.width, header.height, format
+                deswizzled, header.width, header.height, format_value
             )
 
             image = QImage(

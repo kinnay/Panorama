@@ -5,8 +5,11 @@ from PyQt6.QtWidgets import *
 
 from jungle.errors import ParseError
 from jungle.nw import bfwav
+
 from ninty import audio
-from panorama import colors, nodes, plugins, properties, signals
+
+from panorama import colors, nodes, plugins, signals
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
@@ -373,14 +376,14 @@ class BFWAVPlayer(QWidget):
         self._currentTimeLabel.setText(formatTime(value))
 
 
-class BFWAVProperties(properties.PropertyView):
+class BFWAVProperties(PropertyView):
     def __init__(self, file: bfwav.BFWAVFile):
         super().__init__()
         self.setProperties(self._makeProperties(file))
     
     def _makeProperties(
         self, file: bfwav.BFWAVFile
-    ) -> properties.PropertyDict:
+    ) -> PropertyDict:
         props = {
             "Endianness": Endianness[file.endianness],
             "Version": f"0x{file.version:X}",
@@ -405,11 +408,11 @@ class BFWAVProperties(properties.PropertyView):
     
     def _makeChannel(
         self, file: bfwav.BFWAVFile, channel: bfwav.BFWAVChannel
-    ) -> properties.PropertyDict:
+    ) -> PropertyDict:
         if channel.adpcm_info is None:
             raise ValueError("Expected ADPCM info in channel object")
         
-        props: properties.PropertyDict = {
+        props: PropertyDict = {
             "ADPCM coefficients": channel.adpcm_info.coefs
         }
 
@@ -426,7 +429,7 @@ class BFWAVProperties(properties.PropertyView):
     
     def _makeAdpcmContext(
         self, context: bfwav.ADPCMContext
-    ) -> properties.PropertyDict:
+    ) -> PropertyDict:
         return {
             "Initial header byte": context.header,
             "Initial history byte 1": context.hist1,

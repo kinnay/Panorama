@@ -1,13 +1,14 @@
 
 from PyQt6.QtWidgets import *
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView
 
 import qtawesome
 import zstd
 
 
-class ZstdWidget(properties.PropertyView):
+class ZstdWidget(PropertyView):
     def __init__(self, compressed: bytes, decompressed: bytes):
         super().__init__()
 

@@ -4,16 +4,17 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import bameta
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
 
-class BAMETAWidget(properties.PropertyView):
+class BAMETAWidget(PropertyView):
     def __init__(self, file: bameta.BAMETAFile):
         super().__init__()
 
-        props: properties.PropertyDict = {
+        props: PropertyDict = {
             "Endianness": "Big" if file.endianness == ">" else "Little",
             "Version": f"0x{file.version:X}",
             "Name": file.name,

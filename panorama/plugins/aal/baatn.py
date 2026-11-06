@@ -4,16 +4,17 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import baatn
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
 
-class BAATNWidget(properties.PropertyView):
+class BAATNWidget(PropertyView):
     def __init__(self, file: baatn.BAATNFile):
         super().__init__()
 
-        props: properties.PropertyDict = {
+        props: PropertyDict = {
             "Endianness": "Big" if file.endianness == ">" else "Little",
             "Version": file.version,
             "Directivity": file.directivity,

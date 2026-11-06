@@ -4,16 +4,17 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import bars, bameta
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
 
-class BARSWidget(properties.PropertyView):
+class BARSWidget(PropertyView):
     def __init__(self, file: bars.BARSFile):
         super().__init__()
 
-        props: properties.PropertyDict = {
+        props: PropertyDict = {
             "Endianness": "Big" if file.endianness == ">" else "Little",
             "File format version": f"{file.version >> 8}.{file.version & 0xFF}",
             "Number of assets": len(file.assets)

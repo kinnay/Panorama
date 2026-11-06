@@ -4,12 +4,13 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.sead import sarc
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView
 
 import qtawesome
 
 
-class SARCWidget(properties.PropertyView):
+class SARCWidget(PropertyView):
     def __init__(self, file: sarc.SARCFile):
         super().__init__()
 

@@ -4,12 +4,13 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import baroc
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView
 
 import qtawesome
 
 
-class BAROCWidget(properties.PropertyView):
+class BAROCWidget(PropertyView):
     def __init__(self, file: baroc.BAROCFile):
         super().__init__()
 

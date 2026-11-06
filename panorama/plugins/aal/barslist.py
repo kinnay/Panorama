@@ -4,12 +4,13 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.aal import barslist
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView
 
 import qtawesome
 
 
-class BARSLISTWidget(properties.PropertyView):
+class BARSLISTWidget(PropertyView):
     def __init__(self, file: barslist.BARSLISTFile):
         super().__init__()
 

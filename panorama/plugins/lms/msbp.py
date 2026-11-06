@@ -4,16 +4,17 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.lms import msbp
 
-from panorama import colors, nodes, plugins, properties
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView, PropertyDict
 
 import qtawesome
 
 
-class MSBPWidget(properties.PropertyView):
+class MSBPWidget(PropertyView):
     def __init__(self, file: msbp.MSBPFile):
         super().__init__()
 
-        props: properties.PropertyDict = {}
+        props: PropertyDict = {}
 
         if file.colors is not None:
             colors = {}

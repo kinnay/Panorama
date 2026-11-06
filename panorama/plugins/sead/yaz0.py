@@ -4,12 +4,14 @@ from PyQt6.QtWidgets import *
 from jungle.errors import ParseError
 from jungle.sead import yaz0
 from ninty.yaz0 import decompress
-from panorama import colors, nodes, plugins, properties
+
+from panorama import colors, nodes, plugins
+from panorama.widgets import PropertyView
 
 import qtawesome
 
 
-class Yaz0Widget(properties.PropertyView):
+class Yaz0Widget(PropertyView):
     def __init__(self, file: yaz0.Yaz0File):
         super().__init__()
 
