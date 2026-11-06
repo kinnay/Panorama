@@ -55,6 +55,8 @@ class MainWindow(QMainWindow):
     _workspacePaths: list[str]
     _workspaceDock: QDockWidget
 
+    _tabs: QTabWidget
+
     def __init__(self, settings: QSettings):
         super().__init__()
         self._settings = settings
@@ -68,8 +70,10 @@ class MainWindow(QMainWindow):
         self._initializeMenuBar()
         self._initializeStatusBar()
         self._initializeWorkspace()
-        
-        self.setCentralWidget(QWidget())
+
+        self._tabs = QTabWidget()
+        self.setCentralWidget(self._tabs)
+
         self.setWindowTitle("Panorama")
 
     def closeEvent(self, e: QCloseEvent) -> None:
@@ -163,10 +167,9 @@ class MainWindow(QMainWindow):
             widgets["Hex"] = BinaryWidget(data)
         
         if widgets:
-            tabs = QTabWidget()
+            self._tabs.clear()
             for name, widget in widgets.items():
-                tabs.addTab(widget, name)
-            self.setCentralWidget(tabs)
+                self._tabs.addTab(widget, name)
 
             # This significantly reduces the memory usage when a large file was
             # opened. The garbage collector does not always run automatically,
