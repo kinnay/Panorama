@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panorama-tools"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
     "PyQt6",
     "PyYAML",
@@ -12,7 +12,7 @@ dependencies = [
     "ninty",
     "psutil",
     "zstd",
-    "jungle-package == 0.0.10"
+    "jungle-package == 0.0.11"
 ]
 requires-python = ">= 3.14"
 authors = [
