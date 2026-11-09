@@ -82,10 +82,21 @@ class AudioBuffer(QIODevice):
 
 
 class AudioChannel:
+    """
+    Represents a single audio channel that consists of an audio format spec
+    (sample rate, etc.), and a wave buffer.
+    """
+
     stopped: signals.Signal
+    """
+    Emitted after the last sample has been played when looping is not enabled.
+    """
 
     _buffer: AudioBuffer
+    """The audio buffer object from which Qt reads the samples."""
+
     _sink: QAudioSink
+    """The audio sink into which Qt writes the samples."""
 
     _initialSample: int
     """The sample at which audio play back was started."""
@@ -109,7 +120,7 @@ class AudioChannel:
         
         self._initialSample = 0
         
-        self._sampleRate = 48000
+        self._sampleRate = format.sampleRate()
         self._numSamples = len(data) // 2
         
         self._loopPos = None
