@@ -8,23 +8,9 @@ To update the tool to the latest version, run `pipx upgrade panorama-tools`.
 After installation, the tool can be started by executing `panorama`.
 
 ## Features
-After launching the tool, you can import files or folder into the workspace. This allows you to browse through files in a tree, including files that are stored in archives. After selecting a file in the tree, the contents of the file are displayed on the screen. In addition to file-specific widgets, a hex viewer is shown that displays the raw contents of the file, even for files that would otherwise not be supported. In addition, all files can be extracted from archives.
+After launching the tool, you can import files or folder into the workspace. This allows you to browse through files in a tree, including files that are stored in archives. After selecting a file in the tree, the contents of the file are displayed on the screen. In addition to file-specific widgets, a hex viewer is shown that displays the raw contents of the file, even for files that would otherwise not be supported.
 
-The following file formats currently have a plugin implemented for them:
-
-| Library | Format | Extensions | Description |
-| --- | --- | --- | --- |
-| Multiple | [BYAML](https://nintendo-formats.com/libs/common/byaml.html) | `.byml` / `.byaml` | Binary YAML |
-| AAL | [BAMETA](https://nintendo-formats.com/libs/aal/bameta.html) | `.bameta` | Audio metadata |
-| AAL | [BARS](https://nintendo-formats.com/libs/aal/bars.html) | `.bars` | Audio resources |
-| AAL | [BARSLIST](https://nintendo-formats.com/libs/aal/barslist.html) | `.barslist` | Audio resource lists |
-| AGL | [PMAA](https://nintendo-formats.com/libs/agl/pmaa.html) | `.bagl*` | Graphics parameters |
-| LMS | [MSBP](https://nintendo-formats.com/libs/lms/msbp.html) | `.msbp` | Message project files |
-| LMS | [MSBT](https://nintendo-formats.com/libs/lms/msbt.html) | `.msbt` | Message files |
-| NW4F | [BFWAV](https://nintendo-formats.com/libs/nw/bfwav.html) | `.bfwav` | Wave files |
-| SEAD | [SARC](https://nintendo-formats.com/libs/sead/sarc.html) | `.sarc` | Archives |
-| SEAD | [SZS](https://nintendo-formats.com/libs/sead/yaz0.html) | `.szs` | Yaz0 compression |
-| Other | [ZSTD](https://facebook.github.io/zstd) | `.zs` | Zstd compression |
+Many files formats are currently supported, including archive, audio and texture formats. Check out the [plugins](https://github.com/kinnay/Panorama/tree/main/panorama/plugins) folder to see a list of file formats that are currently supported.
 
 ## Screenshots
 <div style="float: left">
