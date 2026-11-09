@@ -100,8 +100,8 @@ class BFLIMNode(nodes.File):
     def createWidgets(self):
         widgets = {}
         if self._file:
-            widgets["BFLIM"] = BFLIMWidget(self._file)
             widgets["Viewer"] = BFLIMViewer(self._file)
+            widgets["BFLIM"] = BFLIMWidget(self._file)
         return widgets
 
 
