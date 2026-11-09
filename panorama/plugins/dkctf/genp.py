@@ -11,9 +11,11 @@ from jungle.errors import ParseError
 from panorama import colors, nodes, plugins, utils
 from panorama.widgets import ScaledTreeWidget
 
-from _typeshed import DataclassInstance
-
 import qtawesome
+import typing
+
+if typing.TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 
 type ParentItem = QTreeWidget | QTreeWidgetItem
