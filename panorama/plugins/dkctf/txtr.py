@@ -80,10 +80,11 @@ class TXTRViewer(QWidget):
         super().__init__()
         header = file.header
 
+        widget: QWidget
         if header.type != txtr.TextureType.Texture2D:
             widget = QLabel(f"Unsupported texture type: {header.type.name}")
         elif header.format not in SurfaceFormats:
-            widget = QLabel(f"Unsupported texture format: {header.ormat.name}")
+            widget = QLabel(f"Unsupported texture format: {header.format.name}")
         elif header.depth != 1:
             widget = QLabel(f"Unsupported texture depth: {header.depth}")
         else:

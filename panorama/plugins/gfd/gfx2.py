@@ -64,6 +64,7 @@ class Gfx2TextureViewer(QWidget):
         super().__init__()
         surface = texture.surface
 
+        widget: QWidget
         if surface.dim != GX2SurfaceDim.Texture2D:
             widget = QLabel(f"Unsupported surface dim: {surface.dim}")
         elif surface.depth != 1:

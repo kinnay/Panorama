@@ -11,6 +11,8 @@ from jungle.errors import ParseError
 from panorama import colors, nodes, plugins, utils
 from panorama.widgets import ScaledTreeWidget
 
+from _typeshed import DataclassInstance
+
 import qtawesome
 
 
@@ -25,7 +27,9 @@ class GENPWidget(ScaledTreeWidget):
 
         self.setRatios([.5, .5])
 
-    def _createItem(self, parent: ParentItem, object: object) -> None:
+    def _createItem(
+        self, parent: ParentItem, object: DataclassInstance
+    ) -> None:
         for field in fields(object):
             value = getattr(object, field.name)
             if value is None:
