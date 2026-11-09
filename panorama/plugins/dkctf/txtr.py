@@ -10,7 +10,7 @@ from jungle.gx2.textures import GX2SurfaceFormat, GX2SurfaceType
 from ninty import gx2, lzss
 
 from panorama import colors, nodes, plugins, utils
-from panorama.widgets import PropertyView
+from panorama.widgets import PropertyView, ImageWidget
 
 import qtawesome
 
@@ -80,13 +80,12 @@ class TXTRViewer(QWidget):
         super().__init__()
         header = file.header
 
-        label = QLabel()
         if header.type != txtr.TextureType.Texture2D:
-            label.setText(f"Unsupported texture type: {header.type.name}")
+            widget = QLabel(f"Unsupported texture type: {header.type.name}")
         elif header.format not in SurfaceFormats:
-            label.setText(f"Unsupported texture format: {header.ormat.name}")
+            widget = QLabel(f"Unsupported texture format: {header.ormat.name}")
         elif header.depth != 1:
-            label.setText(f"Unsupported texture depth: {header.depth}")
+            widget = QLabel(f"Unsupported texture depth: {header.depth}")
         else:
             type, format = SurfaceFormats[header.format]
             format_value = (type << 8) | format
@@ -103,12 +102,11 @@ class TXTRViewer(QWidget):
                 decoded, header.width, header.height,
                 QImage.Format.Format_RGBA8888
             )
-            pixmap = QPixmap.fromImage(image)
-            label.setPixmap(pixmap)
+            widget = ImageWidget(image)
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(label)
+        layout.addWidget(widget)
 
 
 class TXTRNode(nodes.File):

@@ -4,21 +4,9 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from panorama import colors, nodes, plugins
+from panorama.widgets import ImageWidget
 
 import qtawesome
-
-
-class ImageWidget(QWidget):
-    def __init__(self, image: QImage):
-        super().__init__()
-        pixmap = QPixmap.fromImage(image)
-        
-        label = QLabel()
-        label.setPixmap(pixmap)
-
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(label)
 
 
 class ImageNode(nodes.File):

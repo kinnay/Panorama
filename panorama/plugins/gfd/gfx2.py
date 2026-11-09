@@ -10,7 +10,7 @@ from jungle.gx2.textures import GX2Texture, GX2SurfaceDim
 from ninty import gx2
 
 from panorama import colors, nodes, plugins, utils
-from panorama.widgets import PropertyView
+from panorama.widgets import PropertyView, ImageWidget
 
 import qtawesome
 
@@ -64,11 +64,10 @@ class Gfx2TextureViewer(QWidget):
         super().__init__()
         surface = texture.surface
 
-        label = QLabel()
         if surface.dim != GX2SurfaceDim.Texture2D:
-            label.setText(f"Unsupported surface dim: {surface.dim}")
+            widget = QLabel(f"Unsupported surface dim: {surface.dim}")
         elif surface.depth != 1:
-            label.setText(f"Unsupported surface depth: {surface.depth}")
+            widget = QLabel(f"Unsupported surface depth: {surface.depth}")
         else:
             format = (surface.type << 8) | surface.format
             deswizzled = gx2.deswizzle(
@@ -83,12 +82,12 @@ class Gfx2TextureViewer(QWidget):
                 decoded, surface.width, surface.height,
                 QImage.Format.Format_RGBA8888
             )
-            pixmap = QPixmap.fromImage(image)
-            label.setPixmap(pixmap)
+
+            widget = ImageWidget(image)
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(label)
+        layout.addWidget(widget)
 
 
 class Gfx2TextureNode(nodes.Node):
