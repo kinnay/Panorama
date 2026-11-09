@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "panorama-tools"
-version = "0.0.19"
+version = "0.0.20"
 dependencies = [
     "PyQt6",
     "PyYAML",
@@ -33,3 +33,6 @@ panorama = "panorama.main:main"
 [tool.setuptools.packages.find]
 namespaces = true
 include = ["panorama", "panorama.*"]
+
+[tool.deptry]
+exclude = ["increment_version.py"]

@@ -1,6 +1,9 @@
 
 set -e
 
+deptry .
+mypy .
+
 VERSION=$(python3 increment_version.py)
 python3 -m build
 twine upload \
