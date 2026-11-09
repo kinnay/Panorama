@@ -7,10 +7,10 @@ name = "panorama-tools"
 version = "0.0.17"
 dependencies = [
     "PyQt6",
+    "PyYAML",
     "QtAwesome",
     "ninty",
     "psutil",
-    "yaml",
     "zstd",
     "jungle-package == 0.0.10"
 ]
