@@ -9,9 +9,10 @@ dependencies = [
     "PyQt6",
     "PyYAML",
     "QtAwesome",
-    "ninty",
     "psutil",
     "zstd",
+
+    "ninty == 0.0.13",
     "jungle-package == 0.0.11"
 ]
 requires-python = ">= 3.14"

@@ -7,7 +7,7 @@ from panorama.plugins.common import byaml
 from panorama.plugins.dkctf import genp, pak, txtr
 from panorama.plugins.gfd import gfx2
 from panorama.plugins.lms import msbp, msbt
-from panorama.plugins.nw import bfwav
+from panorama.plugins.nw import bflim, bfwav
 from panorama.plugins.sead import sarc, yaz0
 from panorama.plugins.switch import bdf
 
@@ -54,6 +54,7 @@ class Plugins:
 			bars.BARSPlugin(),
 			barslist.BARSLISTPlugin(),
 			bdf.BDFPlugin(),
+			bflim.BFLIMPlugin(),
 			bfwav.BFWAVPlugin(),
 			byaml.BYAMLPlugin(),
 			gfx2.Gfx2Plugin(),
